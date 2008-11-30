@@ -26,7 +26,7 @@ project root if it is of this type of project, or NIL otherwise."
         ((not (equal start-at "/"))
          (eproject--scan-parents-for
           (expand-file-name (concat start-at "/" "..")) predicate))
-        (t nil))))
+        (t nil)))
 
 (defun eproject--find-file-named (start-at filename)
   (eproject--scan-parents-for start-at
@@ -141,9 +141,10 @@ strings to choose from."
                                          (eproject-get-project-metadatum
                                           eproject-type :relevant-files))))))
     (message matcher)
-    (eproject--icomplete-read-with-alist "Project file: "
-      (mapcar #'eproject--shorten-filename
-              (eproject--search-directory-tree eproject-root matcher)))))
+    (find-file (eproject--icomplete-read-with-alist
+                "Project file: "
+                (mapcar #'eproject--shorten-filename
+                        (eproject--search-directory-tree eproject-root matcher))))))
 
 (defun eproject-assert-type (type)
   "Assert that the current buffer is in a project of type TYPE."
