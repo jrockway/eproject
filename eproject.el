@@ -6,12 +6,10 @@
 (defvar eproject-project-types nil
   "An alist of PROJECT to (supertypes selector metadata-plist) pairs.")
 
-(defmacro define-project-type (type supertypes selector relevant-files)
+(defmacro define-project-type (type supertypes selector &rest metadata)
   "Define a new project type TYPE that inherits from SUPERTYPES.
 SELECTOR is a form that is given a filename FILE and returns the
-project root if it is of this type of project, or NIL otherwise.
-RELEVANT-FILES is a list of regular expressions that matches
-important files in this project type."
+project root if it is of this type of project, or NIL otherwise."
   `(progn
      (defvar ,(intern (format "%s-project-file-visit-hook" type)) nil
        ,(format "Hooks that will be run when a file in a %s project is opened." type))
@@ -20,7 +18,7 @@ important files in this project type."
                     (list
                      (list ',type ',supertypes
                            (lambda (file) ,selector)
-                           (list :relevant-files ',relevant-files)))))))
+                           ',metadata))))))
 
 (defun eproject--scan-parents-for (start-at predicate)
   "Look for a file named FILE in parent directories of START-AT"
@@ -35,8 +33,8 @@ important files in this project type."
    (lambda (directory)
      (file-exists-p (concat directory "/" filename)))))
 
-(define-project-type generic () nil ("^[^.]"))
-(define-project-type generic-git (generic) (look-for ".git") nil)
+(define-project-type generic () nil :relevant-files ("^[^.]"))
+(define-project-type generic-git (generic) (look-for ".git"))
 
 (defun eproject--type-info (type)
   (or
