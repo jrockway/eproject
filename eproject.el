@@ -150,7 +150,7 @@ strings to choose from."
 (defun eproject-assert-type (type)
   "Assert that the current buffer is in a project of type TYPE."
   (when (or (not (boundp 'eproject-type))
-            (not (eq eproject-type type)))
+            (not (memq type (eproject--linearized-isa eproject-type t))))
     (error (format "%s is not in a project of type %s!"
                    (buffer-file-name) type))))
 
