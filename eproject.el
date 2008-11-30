@@ -60,7 +60,9 @@ important files in this project type."
           nconc (eproject--linearized-isa stype)))))
 
 (defun eproject--all-types ()
-  '(generic-git generic))
+  ;; this should be most specific to least specific, as long as nothing
+  ;; is forward-referenced.
+ (reverse (mapcar #'car eproject-project-types)))
 
 (defun eproject-get-project-metadatum (type key)
   (loop for next-type in (eproject--linearized-isa type t)
@@ -141,4 +143,13 @@ strings to choose from."
       (mapcar #'eproject--shorten-filename
               (eproject--search-directory-tree eproject-root matcher)))))
 
+(defun eproject-assert-type (type)
+  "Assert that the current buffer is in a project of type TYPE."
+  (when (or (not (boundp 'eproject-type))
+            (not (eq eproject-type type)))
+    (error (format "%s is not in a project of type %s!"
+                   (buffer-file-name) type))))
+
 (add-hook 'find-file-hook #'eproject-maybe-turn-on)
+
+(provide 'eproject)
