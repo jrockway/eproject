@@ -22,14 +22,18 @@ important files in this project type."
                            (lambda (file) ,selector)
                            (list :relevant-files ',relevant-files)))))))
 
-(defun eproject--scan-parents-for (start-at file)
+(defun eproject--scan-parents-for (start-at predicate)
   "Look for a file named FILE in parent directories of START-AT"
-  (let ((try (expand-file-name (concat start-at "/" file))))
-    (cond ((file-exists-p try) start-at)
-          ((not (equal start-at "/"))
-           (eproject--scan-parents-for
-            (expand-file-name (concat start-at "/" "..")) file))
-          (t nil))))
+  (cond ((funcall predicate start-at) start-at)
+        ((not (equal start-at "/"))
+         (eproject--scan-parents-for
+          (expand-file-name (concat start-at "/" "..")) predicate))
+        (t nil))))
+
+(defun eproject--find-file-named (start-at filename)
+  (eproject--scan-parents-for start-at
+   (lambda (directory)
+     (file-exists-p (concat directory "/" filename)))))
 
 (define-project-type generic () nil ("^[^.]"))
 (define-project-type generic-git (generic) (look-for ".git") nil)
@@ -47,7 +51,7 @@ important files in this project type."
 
 (defun* eproject--run-project-selector (type &optional (file (buffer-file-name)))
   (flet ((look-for (filename)
-                   (eproject--scan-parents-for file filename)))
+                   (eproject--find-file-named file filename)))
     (funcall (eproject--project-selector type) file)))
 
 
