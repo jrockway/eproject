@@ -1,4 +1,104 @@
-;;; eproject
+;; eproject.el
+;;
+;; Copyright (C) 2008 Jonathan Rockway <jon@jrock.us>
+;;
+;; This program is free software; you can redistribute it and/or
+;; modify it under the terms of the GNU General Public License as
+;; published by the Free Software Foundation; either version 2 of
+;; the License, or (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+;; GNU General Public License for more details.
+;;
+;; You should have received a copy of the GNU General Public
+;; License along with this program; if not, write to the Free
+;; Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+;; MA 02111-1307, USA.
+;;
+;; Usage:
+;;
+;; Eproject is an extension that lets you group related files together
+;; as projects.  It aims to be as unobtrusive as possible -- no new
+;; files are created (or required to exist) on disk, and buffers that
+;; aren't a member of a project are not affected in any way.
+;;
+;; The main starting point for eproject is defining project types.
+;; There is a macro for this, define-project-type, that accepts four
+;; arguments, the type name (a symbol), a list of supertypes (for
+;; inheriting properties) a form that is executed to determine whether
+;; a file is a member of a project, and then a free-form property
+;; list.  An example will clear things up.
+;;
+;; Let's create a "perl" project type, for Perl projects that have a
+;; Makefile.PL.
+;;
+;; (define-project-type perl (generic)
+;;   (look-for "Makefile.PL")
+;;   :relevant-files ("\\.pm$" "\\.t$"))
+;;
+;; Now when you open a file and somewhere above in the directory tree
+;; there is a Makefile.PL, it will be a "perl project".
+;;
+;; There are a few things you get with this.  A hook called
+;; perl-project-file-visit-hook will be run, and the buffer will have
+;; the "eproject-mode" minor-mode turned on.  You can also read and
+;; set metadata via the eproject-get-project-metadatum and
+;; eproject-add-project-metadatum calls.
+;;
+;; (Right now, you get a "C-c C-f" keybinding which will allow you
+;; to easily visit any of the "relevant files" in the project.  You
+;; can add your own bindings to the eproject-mode-map, of course.)
+;;
+;; Let's look at the mechanics of the define-project-type call.  The
+;; first argument is the name of the project type -- it can be any
+;; symbol.  The next argument is a list of other projects types that
+;; this project will inherit from.  That means that if you call
+;; eproject-get-project-metadatum and the current project doesn't
+;; define a value, we'll look at the supertypes until we get something
+;; non-nil.  Usually you will want to set this to (generic), which
+;; will make your type work correctly even if you don't define any of
+;; your own metadata.
+;;
+;; The next argument is a form that will be executed with the filename
+;; that was just opened bound to FILE.  It is expected to return the
+;; project root, or nil if FILE is not in a project of this type.  The
+;; look-for function will look up the directory tree for a file that
+;; is named the same as its argument.  You can write any Lisp here you
+;; like; we'll see some more examples later.  (You only get one form,
+;; so if you need to execute more than one, just wrap it in a progn.)
+;;
+;; The final (&rest-style) argument is a property list of initial project
+;; metadata.  You can put anything you want here, as long as it is in the
+;; form of a property list (keyword, value, keyword, value, ...).
+;;
+;; After this form runs, eproject will be able to recognize files in
+;; the type of the project you defined.  It also creates a hook named
+;; <type>-project-file-visit-hook.  You can do anything you want here,
+;; including access (eproject-type) and (eproject-root).
+;;
+;; As an example, in my perl-project-file-visit-hook, I do this:
+;;
+;; (lambda ()
+;;   (ignore-errors
+;;     (stylish-repl-eval-perl
+;;      (format "use lib '%s'" (car (perl-project-includes)))))))
+;;
+;; This will add the library directory of this project to my current
+;; stylish-repl session, so that I can use my project in the REPL
+;; immediately.  (I do something similar for Lisp + SLIME projects)
+;;
+;; That's basically all there is.  eproject is designed to be minimal and
+;; extensible, so I hope it meets your needs.
+;;
+;; Please do not hesitate to e-mail or find me on #emacs (jrockway) if
+;; you have questions.  If you'd like to send a patch (always appreciated),
+;; please diff against the latest git version, available by running:
+;;
+;; $ git clone git://git.jrock.us/eproject
+;;
+;; Share and enjoy.
 
 (require 'iswitchb)
 (require 'cl)
