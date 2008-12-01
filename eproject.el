@@ -99,6 +99,16 @@
 ;; $ git clone git://git.jrock.us/eproject
 ;;
 ;; Share and enjoy.
+;;
+;; Bugs:
+;;
+;; You can't forward reference supertypes -- this will mess things up
+;; internally, but you won't get a warning.  This can be easily fixed
+;; by using a smarter algorithm for eproject--all-types.
+;;
+;; The "linearized isa" (i.e. "class precedence list") is computed
+;; with a depth-first search.  This is bad; we should really use the
+;; C3 ordering.
 
 (require 'iswitchb)
 (require 'cl)
