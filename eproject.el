@@ -85,6 +85,18 @@ if the buffer isn't in an eproject.")
 (make-variable-buffer-local 'eproject-root)
 (make-variable-buffer-local 'eproject-type)
 
+(defmacro define-eproject-accessor (variable)
+  `(defun* ,(intern (format "eproject-%s" variable))
+       (&optional (buffer (current-buffer)))
+     ,(format "Return the value of the eproject variable %s.  BUFFER defaults to the current buffer." variable)
+     (with-current-buffer buffer
+       (when (not eproject-mode)
+         (error "Buffer is not an eproject buffer!"))
+       ,(intern (format "eproject-%s" variable)))))
+
+(define-eproject-accessor root)
+(define-eproject-accessor type)
+
 (define-minor-mode eproject-mode
   "A minor mode for buffers that are a member of an eproject project."
   nil " Project"
@@ -117,7 +129,7 @@ if the buffer isn't in an eproject.")
                  nconc (eproject--search-directory-tree dir file-regexp)))))
 
 (defun eproject--shorten-filename (filename)
-  (string-match (format "^%s/\\(.+\\)$" (regexp-quote eproject-root)) filename)
+  (string-match (format "^%s/\\(.+\\)$" (regexp-quote (eproject-root))) filename)
   (cons (match-string 1 filename) filename))
 
 (defun eproject--icompleting-read (prompt choices)
@@ -139,17 +151,15 @@ strings to choose from."
                          (reduce (lambda (a b) (concat a "\\|" b))
                                  (mapcar (lambda (f) (format "\\(?:%s\\)" f))
                                          (eproject-get-project-metadatum
-                                          eproject-type :relevant-files))))))
-    (message matcher)
+                                          (eproject-type) :relevant-files))))))
     (find-file (eproject--icomplete-read-with-alist
                 "Project file: "
                 (mapcar #'eproject--shorten-filename
-                        (eproject--search-directory-tree eproject-root matcher))))))
+                        (eproject--search-directory-tree (eproject-root) matcher))))))
 
 (defun eproject-assert-type (type)
   "Assert that the current buffer is in a project of type TYPE."
-  (when (or (not (boundp 'eproject-type))
-            (not (memq type (eproject--linearized-isa eproject-type t))))
+  (when (not (memq type (eproject--linearized-isa (eproject-type) t)))
     (error (format "%s is not in a project of type %s!"
                    (buffer-file-name) type))))
 
