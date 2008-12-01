@@ -113,6 +113,7 @@ if the buffer isn't in an eproject.")
                (setq eproject-type type)
                (setq eproject-root root)
                (eproject-mode 1)
+               (run-hooks (intern (format "%s-project-file-visit-hook" type)))
                (return root)))))
 
 (defun eproject--search-directory-tree (directory file-regexp)
