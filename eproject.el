@@ -270,7 +270,11 @@ strings to choose from."
   (let ((iswitchb-make-buflist-hook
          (lambda ()
            (setq iswitchb-temp-buflist choices))))
-    (iswitchb-read-buffer prompt)))
+    (when (not iswitchb-mode)
+      (add-hook 'minibuffer-setup-hook 'iswitchb-minibuffer-setup))
+    (prog1 (iswitchb-read-buffer prompt)
+      (when (not iswitchb-mode)
+        (remove-hook 'minibuffer-setup-hook 'iswitchb-minibuffer-setup)))))
 
 (defun eproject--icomplete-read-with-alist (prompt alist)
   (let ((show (mapcar (lambda (x) (car x)) alist)))
