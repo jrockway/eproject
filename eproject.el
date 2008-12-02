@@ -131,7 +131,8 @@ project root if it is of this type of project, or NIL otherwise."
                            ',metadata))))))
 
 (defun eproject--scan-parents-for (start-at predicate)
-  "Look for a file named FILE in parent directories of START-AT"
+  "Call PREDICATE with each parent directory of START-AT, returning the
+path to the first directory where PREDICATE returns T."
   (cond ((funcall predicate start-at) start-at)
         ((not (equal start-at "/"))
          (eproject--scan-parents-for
