@@ -228,17 +228,16 @@ if the buffer isn't in an eproject.")
                (return root)))))
 
 (defun eproject--search-directory-tree (directory file-regexp)
-  (let* ((content (directory-files (file-name-as-directory directory) t "^[^.]" t))
-         (files (loop for file in content
-                      when (and (not (file-directory-p file))
-                                (string-match file-regexp file))
-                      collect file))
-         (directories (loop for file in content
-                            when (file-directory-p file)
-                            collect file)))
-    (nconc files
-           (loop for dir in directories
-                 nconc (eproject--search-directory-tree dir file-regexp)))))
+  (loop for file in (directory-files (file-name-as-directory directory) t "^[^.]" t)
+        when (and (not (file-directory-p file))
+                  (string-match file-regexp file))
+        collect file into files
+        when (file-directory-p file)
+        collect file into directories
+        finally return
+          (nconc files
+                 (loop for dir in directories
+                       nconc (eproject--search-directory-tree dir file-regexp)))))
 
 (defun eproject--shorten-filename (filename)
   (string-match (format "^%s/\\(.+\\)$" (regexp-quote (eproject-root))) filename)
