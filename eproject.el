@@ -65,9 +65,11 @@
 ;; that was just opened bound to FILE.  It is expected to return the
 ;; project root, or nil if FILE is not in a project of this type.  The
 ;; look-for function will look up the directory tree for a file that
-;; is named the same as its argument.  You can write any Lisp here you
-;; like; we'll see some more examples later.  (You only get one form,
-;; so if you need to execute more than one, just wrap it in a progn.)
+;; is named the same as its argument (see the docstring for
+;; `eproject--look-for-impl' for all the details).  You can write any
+;; Lisp here you like; we'll see some more examples later.  (You only
+;; get one form, so if you need to execute more than one, just wrap it
+;; in a progn.)
 ;;
 ;; The final (&rest-style) argument is a property list of initial project
 ;; metadata.  You can put anything you want here, as long as it is in the
@@ -158,11 +160,29 @@ path to the first directory where PREDICATE returns T."
 (defun eproject--project-selector (type)
   (nth 2 (eproject--type-info type)))
 
-(defun* eproject--run-project-selector (type &optional (file (buffer-file-name)))
-  (flet ((look-for (filename)
-                   (eproject--find-file-named file filename)))
-    (funcall (eproject--project-selector type) file)))
+(defun eproject--look-for-impl (file expression &optional type)
+  "Implements the LOOK-FOR function that is flet-bound during
+`eproject--run-project-selector'.  EXPRESSION and TYPE specify
+what to look for.  Some examples:
 
+   (look-for \"Makefile.PL\") ; look up the directory tree for a file called Makefile.PL
+   (look-for \"*.PL\" :glob) ; look for a file matching *.PL
+"
+  (when (not type) (setq type :filename))
+  (case type
+    (:filename (eproject--find-file-named file expression))
+    (:glob (eproject--scan-parents-for file
+             (lambda (current-directory)
+               (let ((default-directory current-directory))
+                 (and (not (equal file current-directory))
+                      (> (length (file-expand-wildcards expression)) 0))))))
+    (otherwise (error "Don't know how to handle %s in LOOK-FOR!" type))))
+
+(defun* eproject--run-project-selector (type &optional (file (buffer-file-name)))
+  "Run the selector associated with project type TYPE."
+  (flet ((look-for (expr &optional expr-type)
+                   (funcall #'eproject--look-for-impl file expr expr-type)))
+    (funcall (eproject--project-selector type) file)))
 
 (defun eproject--linearized-isa (type &optional include-self)
   (delete-duplicates
