@@ -213,12 +213,10 @@ what to look for.  Some examples:
   (setf (getf (nth 3 (assoc type eproject-project-types)) key) value))
 
 (defvar eproject-root nil
-  "A buffer-local variable set to the root of its eproject project.  NIL if
-it isn't in an eproject.")
+  "A buffer-local variable set to the root of its eproject project.  NIL if it isn't in an eproject.")
 
 (defvar eproject-type nil
-  "A buffer-local variable set to the type of this buffer's eproject project.  NIL
-if the buffer isn't in an eproject.")
+  "A buffer-local variable set to the type of this buffer's eproject project.  NIL if the buffer isn't in an eproject.")
 
 (make-variable-buffer-local 'eproject-root)
 (make-variable-buffer-local 'eproject-type)
