@@ -1,6 +1,14 @@
 ;; eproject.el - assign files to projects, programatically
 ;;
-;; Copyright (C) 2008 Jonathan Rockway <jon@jrock.us>
+;; Copyright (C) 2008, 2009 Jonathan Rockway <jon@jrock.us>
+;;
+;; Author: Jonathan Rockway <jon@jrock.us>
+;; Maintainer: Jonathan Rockway <jon@jrock.us>
+;; Created: 20 Nov 2008
+;; Version: 1.1
+;; Keywords: programming, projects
+;;
+;; This file is not a part of GNU Emacs.
 ;;
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the GNU General Public License as
@@ -17,9 +25,7 @@
 ;; Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
 ;; MA 02111-1307, USA.
 ;;
-;; This file is not a part of GNU Emacs.
-;;
-;; Usage:
+;;; Commentary
 ;;
 ;; Eproject is an extension that lets you group related files together
 ;; as projects.  It aims to be as unobtrusive as possible -- no new
@@ -118,6 +124,8 @@
 ;;
 ;; The latest version is on github at
 ;; http://github.com/jrockway/eproject/tree/master
+
+;;; Code:
 
 (require 'iswitchb)
 (require 'cl)
@@ -334,3 +342,5 @@ list of files; used by `eproject-ifind-file'."
 (add-hook 'find-file-hook #'eproject-maybe-turn-on)
 
 (provide 'eproject)
+
+;;; eproject.el ends here
