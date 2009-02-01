@@ -1,4 +1,4 @@
-;; eproject.el
+;; eproject.el - assign files to projects, programatically
 ;;
 ;; Copyright (C) 2008 Jonathan Rockway <jon@jrock.us>
 ;;
@@ -16,6 +16,8 @@
 ;; License along with this program; if not, write to the Free
 ;; Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
 ;; MA 02111-1307, USA.
+;;
+;; This file is not a part of GNU Emacs.
 ;;
 ;; Usage:
 ;;
@@ -98,7 +100,7 @@
 ;; you have questions.  If you'd like to send a patch (always appreciated),
 ;; please diff against the latest git version, available by running:
 ;;
-;; $ git clone git://git.jrock.us/eproject
+;; $ git clone git://github.com/jrockway/eproject
 ;;
 ;; Share and enjoy.
 ;;
@@ -111,6 +113,11 @@
 ;; The "linearized isa" (i.e. "class precedence list") is computed
 ;; with a depth-first search.  This is bad; we should really use the
 ;; C3 ordering.
+;;
+;; Website:
+;;
+;; The latest version is on github at
+;; http://github.com/jrockway/eproject/tree/master
 
 (require 'iswitchb)
 (require 'cl)
