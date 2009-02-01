@@ -321,7 +321,7 @@ what to look for.  Some examples:
 (defcustom eproject-completing-read-function
   #'eproject--icompleting-read
   "The function used to ask the user select a single file from a
-list of files; used by `eproject-ifind-file'."
+list of files; used by `eproject-find-file'."
   :group 'eproject
   :type '(radio (function-item :doc "Use emacs' standard completing-read function."
                                eproject--completing-read)
@@ -335,7 +335,7 @@ list of files; used by `eproject-ifind-file'."
   (let ((show (mapcar (lambda (x) (car x)) alist)))
     (cdr (assoc (funcall eproject-completing-read-function prompt show) alist))))
 
-(defalias 'eproject-ifind-file 'eproject-find-file)
+(defalias 'eproject-ifind-file 'eproject-find-file)  ;; ifind is deperecated
 (defun eproject-find-file ()
   (interactive)
   (let ((matcher (format "\\(?:%s\\)"
