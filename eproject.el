@@ -122,6 +122,8 @@
 (require 'iswitchb)
 (require 'cl)
 
+(defgroup eproject nil "eproject" :prefix "eproject-")
+
 (defvar eproject-project-types nil
   "An alist of PROJECT to (supertypes selector metadata-plist) pairs.")
 
@@ -270,24 +272,52 @@ what to look for.  Some examples:
   (string-match (format "^%s/\\(.+\\)$" (regexp-quote (eproject-root))) filename)
   (cons (match-string 1 filename) filename))
 
+(defun eproject-assert-type (type)
+  "Assert that the current buffer is in a project of type TYPE."
+  (when (not (memq type (eproject--linearized-isa (eproject-type) t)))
+    (error (format "%s is not in a project of type %s!"
+                   (buffer-file-name) type))))
+
+;; support for visiting other project files
+
+(defun eproject--completing-read (prompt choices)
+  "Use completing-read to do a completing read."
+  (completing-read prompt choices nil t))
+
 (defun eproject--icompleting-read (prompt choices)
-  "Use iswitch as a completing-read replacement to choose from
-choices.  PROMPT is a string to prompt with.  CHOICES is a list of
-strings to choose from."
+  "Use iswitchb to do a completing read."
   (let ((iswitchb-make-buflist-hook
          (lambda ()
            (setq iswitchb-temp-buflist choices))))
     (when (not iswitchb-mode)
       (add-hook 'minibuffer-setup-hook 'iswitchb-minibuffer-setup))
-    (prog1 (iswitchb-read-buffer prompt)
+    (prog1 (iswitchb-read-buffer prompt nil t)
       (when (not iswitchb-mode)
         (remove-hook 'minibuffer-setup-hook 'iswitchb-minibuffer-setup)))))
 
+(defun eproject--ido-completing-read (prompt choices)
+  "Use ido to do a completing read."
+  (ido-completing-read prompt choices nil t))
+
+(defcustom eproject-completing-read-function
+  #'eproject--icompleting-read
+  "The function used to ask the user select a single file from a
+list of files; used by `eproject-ifind-file'."
+  :group 'eproject
+  :type '(radio (function-item :doc "Use emacs' standard completing-read function."
+                               eproject--completing-read)
+                (function-item :doc "Use iswitchb's completing-read function."
+                               eproject--icompleting-read)
+                (function-item :doc "Use ido's completing-read function."
+                               eproject--ido-completing-read)
+                (function)))
+
 (defun eproject--icomplete-read-with-alist (prompt alist)
   (let ((show (mapcar (lambda (x) (car x)) alist)))
-    (cdr (assoc (eproject--icompleting-read prompt show) alist))))
+    (cdr (assoc (funcall eproject-completing-read-function prompt show) alist))))
 
-(defun eproject-ifind-file ()
+(defalias 'eproject-ifind-file 'eproject-find-file)
+(defun eproject-find-file ()
   (interactive)
   (let ((matcher (format "\\(?:%s\\)"
                          (reduce (lambda (a b) (concat a "\\|" b))
@@ -299,11 +329,7 @@ strings to choose from."
                 (mapcar #'eproject--shorten-filename
                         (eproject--search-directory-tree (eproject-root) matcher))))))
 
-(defun eproject-assert-type (type)
-  "Assert that the current buffer is in a project of type TYPE."
-  (when (not (memq type (eproject--linearized-isa (eproject-type) t)))
-    (error (format "%s is not in a project of type %s!"
-                   (buffer-file-name) type))))
+;; finish up
 
 (add-hook 'find-file-hook #'eproject-maybe-turn-on)
 
