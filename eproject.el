@@ -124,6 +124,17 @@
 ;;
 ;; The latest version is on github at
 ;; http://github.com/jrockway/eproject/tree/master
+;;
+;;; Changelog:
+;;
+;; 1.1 (Sat Jan 31 20:03:56 CST 2009)
+;;
+;; * Make the completing-read function customizable
+;;
+;; 1.0 (Nov 28 2008)
+;;
+;; * Initial release
+;;
 
 ;;; Code:
 
