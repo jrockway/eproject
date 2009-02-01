@@ -222,13 +222,15 @@ what to look for.  Some examples:
 (make-variable-buffer-local 'eproject-type)
 
 (defmacro define-eproject-accessor (variable)
-  `(defun* ,(intern (format "eproject-%s" variable))
+  "Create a function named eproject-VARIABLE that returns the value of VARIABLE in the context of the current project."
+  (let ((sym (intern (format "eproject-%s" variable))))
+  `(defun* ,sym
        (&optional (buffer (current-buffer)))
      ,(format "Return the value of the eproject variable %s.  BUFFER defaults to the current buffer." variable)
      (with-current-buffer buffer
        (when (not eproject-mode)
          (error "Buffer is not an eproject buffer!"))
-       ,(intern (format "eproject-%s" variable)))))
+       ,sym))))
 
 (define-eproject-accessor root)
 (define-eproject-accessor type)
