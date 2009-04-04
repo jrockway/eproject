@@ -275,9 +275,10 @@ what to look for.  Some examples:
                (run-hooks (intern (format "%s-project-file-visit-hook" type)))
                (return root)))))
 
-(defun eproject--search-directory-tree (directory file-regexp)
+(defun eproject--search-directory-tree (directory file-regexp ignore-regexp)
   (loop for file in (directory-files (file-name-as-directory directory) t "^[^.]" t)
         when (and (not (file-directory-p file))
+                  (not (string-match ignore-regexp file))
                   (string-match file-regexp file))
         collect file into files
         when (file-directory-p file)
@@ -285,7 +286,8 @@ what to look for.  Some examples:
         finally return
           (nconc files
                  (loop for dir in directories
-                       nconc (eproject--search-directory-tree dir file-regexp)))))
+                       nconc (eproject--search-directory-tree dir file-regexp
+                                                              ignore-regexp)))))
 
 (defun eproject--shorten-filename (filename)
   (string-match (format "^%s/\\(.+\\)$" (regexp-quote (eproject-root))) filename)
@@ -342,11 +344,12 @@ list of files; used by `eproject-find-file'."
                          (reduce (lambda (a b) (concat a "\\|" b))
                                  (mapcar (lambda (f) (format "\\(?:%s\\)" f))
                                          (eproject-get-project-metadatum
-                                          (eproject-type) :relevant-files))))))
+                                          (eproject-type) :relevant-files)))))
+        (ignore (concat (regexp-opt completion-ignored-extensions t) "$")))
     (find-file (eproject--icomplete-read-with-alist
                 "Project file: "
                 (mapcar #'eproject--shorten-filename
-                        (eproject--search-directory-tree (eproject-root) matcher))))))
+                        (eproject--search-directory-tree (eproject-root) matcher ignore))))))
 
 ;; finish up
 
