@@ -341,19 +341,27 @@ list of files; used by `eproject-find-file'."
   (let ((show (mapcar (lambda (x) (car x)) alist)))
     (cdr (assoc (funcall eproject-completing-read-function prompt show) alist))))
 
+(defun* eproject-list-project-files
+    (&optional (project-root (eproject-root))
+               (project-type (eproject-type)))
+  "Return a list of all project files of type PROJECT-TYPE in PROJECT-ROOT."
+  (let ((matcher
+         (format "\\(?:%s\\)"
+             (reduce (lambda (a b) (concat a "\\|" b))
+                 (mapcar (lambda (f) (format "\\(?:%s\\)" f))
+                     (eproject-get-project-metadatum project-type :relevant-files)))))
+        (ignore (concat (regexp-opt completion-ignored-extensions t) "$")))
+    (eproject--search-directory-tree project-root matcher ignore)))
+
+
 (defalias 'eproject-ifind-file 'eproject-find-file)  ;; ifind is deperecated
 (defun eproject-find-file ()
+  "Present the user with a list of files in the current project
+to select from, open file when selected."
   (interactive)
-  (let ((matcher (format "\\(?:%s\\)"
-                         (reduce (lambda (a b) (concat a "\\|" b))
-                                 (mapcar (lambda (f) (format "\\(?:%s\\)" f))
-                                         (eproject-get-project-metadatum
-                                          (eproject-type) :relevant-files)))))
-        (ignore (concat (regexp-opt completion-ignored-extensions t) "$")))
-    (find-file (eproject--icomplete-read-with-alist
-                "Project file: "
-                (mapcar #'eproject--shorten-filename
-                        (eproject--search-directory-tree (eproject-root) matcher ignore))))))
+  (find-file (eproject--icomplete-read-with-alist
+              "Project file: "
+              (mapcar #'eproject--shorten-filename (eproject-list-project-files)))))
 
 ;; ibuffer support
 (require 'ibuffer) ;; obviously this could be made optional, but
