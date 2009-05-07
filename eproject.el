@@ -382,6 +382,18 @@ project root PROJECT-ROOT."
   (ibuffer nil "*Project Buffers*"
            (list (cons 'eproject project-root))))
 
+;; extra macros
+(defmacro* with-each-buffer-in-project
+    ((&optional (project-root (eproject-root)))
+     &body body)
+  "Given a project root PROJECT-ROOT, finds each buffer visiting a file in that project, and executes BODY with each buffer as the current buffer."
+  `(loop for buf in (buffer-list)
+         do
+         (with-current-buffer buf
+           (let ((detected-root (ignore-errors (eproject-root))))
+             (when (and detected-root (equal ,project-root detected-root))
+               ,@body)))))
+
 ;; finish up
 
 (add-hook 'find-file-hook #'eproject-maybe-turn-on)
