@@ -270,7 +270,7 @@ what to look for.  Some examples:
         do (let ((root (eproject--run-project-selector type)))
              (when root
                (setq eproject-type type)
-               (setq eproject-root root)
+               (setq eproject-root (file-name-as-directory root))
                (eproject-mode 1)
                (run-hooks (intern (format "%s-project-file-visit-hook" type)))
                (return root)))))
