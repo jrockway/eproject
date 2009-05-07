@@ -394,6 +394,18 @@ project root PROJECT-ROOT."
              (when (and detected-root (equal ,project-root detected-root))
                ,@body)))))
 
+;; bulk management utils
+
+(defun eproject-kill-project-buffers ()
+  (interactive)
+  (with-each-buffer-in-project ()
+      (kill-buffer)))
+
+(defun eproject-open-all-project-files ()
+  (interactive)
+  (loop for file in (eproject-list-project-files)
+        do (find-file file)))
+
 ;; finish up
 
 (add-hook 'find-file-hook #'eproject-maybe-turn-on)
