@@ -386,7 +386,10 @@ project root PROJECT-ROOT."
 (defmacro* with-each-buffer-in-project
     ((&optional (project-root (eproject-root)))
      &body body)
-  "Given a project root PROJECT-ROOT, finds each buffer visiting a file in that project, and executes BODY with each buffer as the current buffer."
+  "Given a project root PROJECT-ROOT, finds each buffer visiting a file in that project, and executes BODY with each buffer as the current buffer.
+
+\(fn (&optional PROJECT-ROOT) &rest BODY)"
+  (declare (indent 2))
   `(loop for buf in (buffer-list)
          do
          (with-current-buffer buf
