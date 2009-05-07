@@ -294,7 +294,7 @@ what to look for.  Some examples:
                                                               ignore-regexp)))))
 
 (defun eproject--shorten-filename (filename)
-  (string-match (format "^%s/\\(.+\\)$" (regexp-quote (eproject-root))) filename)
+  (string-match (format "^%s\\(.+\\)$" (regexp-quote (eproject-root))) filename)
   (cons (match-string 1 filename) filename))
 
 (defun eproject-assert-type (type)
