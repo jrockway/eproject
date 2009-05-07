@@ -403,8 +403,12 @@ project root PROJECT-ROOT."
 
 (defun eproject-open-all-project-files ()
   (interactive)
-  (loop for file in (eproject-list-project-files)
-        do (find-file file)))
+  (let ((total 0))
+    (message "Opening files...")
+    (loop for file in (eproject-list-project-files)
+          do (progn (find-file file) (incf total)))
+    (message "Opened %d files" total)))
+
 
 ;; finish up
 
