@@ -126,6 +126,9 @@
 ;; http://github.com/jrockway/eproject/tree/master
 ;;
 ;;; Changelog:
+;; 1.2 (Thu May  7 02:18:01 CDT 2009)
+;;
+;; * Add ibuffer support
 ;;
 ;; 1.1 (Sat Jan 31 20:03:56 CST 2009)
 ;;
@@ -259,7 +262,8 @@ what to look for.  Some examples:
 (define-minor-mode eproject-mode
   "A minor mode for buffers that are a member of an eproject project."
   nil " Project"
-  '(("" . eproject-ifind-file))
+  '(("" . eproject-ifind-file)
+    ("" . eproject-ibuffer))
   (when (null eproject-root)
     (error "Please do not use this directly.  Call eproject-maybe-turn-on instead.")))
 
@@ -350,6 +354,25 @@ list of files; used by `eproject-find-file'."
                 "Project file: "
                 (mapcar #'eproject--shorten-filename
                         (eproject--search-directory-tree (eproject-root) matcher ignore))))))
+
+;; ibuffer support
+(require 'ibuffer) ;; obviously this could be made optional, but
+                   ;; ibuffer is core, so this should not be harmful
+
+(define-ibuffer-filter eproject
+    "Filter buffers that have the provided eproject root"
+  (:reader (read-directory-name "Project root: " (ignore-errors (eproject-root)))
+           :description "project root")
+  (with-current-buffer buf
+    (equal (file-name-as-directory (expand-file-name qualifier))
+           (ignore-errors (eproject-root)))))
+
+(defun* eproject-ibuffer (&optional (project-root (eproject-root)))
+  "Open an IBuffer window showing all buffers with the
+project root PROJECT-ROOT."
+  (interactive)
+  (ibuffer nil "*Project Buffers*"
+           (list (cons 'eproject project-root))))
 
 ;; finish up
 
