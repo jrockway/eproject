@@ -364,8 +364,8 @@ to select from, open file when selected."
               (mapcar #'eproject--shorten-filename (eproject-list-project-files)))))
 
 ;; ibuffer support
-(require 'ibuffer) ;; obviously this could be made optional, but
-                   ;; ibuffer is core, so this should not be harmful
+(require 'ibuffer)  ;; obviously this could be made optional, but
+(require 'ibuf-ext) ;; ibuffer is core, so this should not be harmful
 
 (define-ibuffer-filter eproject
     "Filter buffers that have the provided eproject root"
