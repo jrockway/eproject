@@ -384,15 +384,15 @@ project root PROJECT-ROOT."
 
 ;; extra macros
 (defmacro* with-each-buffer-in-project
-    ((&optional (project-root (eproject-root)))
+    ((binding &optional (project-root (eproject-root)))
      &body body)
-  "Given a project root PROJECT-ROOT, finds each buffer visiting a file in that project, and executes BODY with each buffer as the current buffer.
+  "Given a project root PROJECT-ROOT, finds each buffer visiting a file in that project, and executes BODY with each buffer bound to BINDING (and made current).
 
-\(fn (&optional PROJECT-ROOT) &rest BODY)"
+\(fn (BINDING &optional PROJECT-ROOT) &body BODY)"
   (declare (indent 2))
-  `(loop for buf in (buffer-list)
+  `(loop for ,binding in (buffer-list)
          do
-         (with-current-buffer buf
+         (with-current-buffer ,binding
            (let ((detected-root (ignore-errors (eproject-root))))
              (when (and detected-root (equal ,project-root detected-root))
                ,@body)))))
@@ -400,11 +400,13 @@ project root PROJECT-ROOT."
 ;; bulk management utils
 
 (defun eproject-kill-project-buffers ()
+  "Kill every buffer in the current project, including the current buffer."
   (interactive)
-  (with-each-buffer-in-project ()
+  (with-each-buffer-in-project (buf)
       (kill-buffer buf)))
 
 (defun eproject-open-all-project-files ()
+  "Open every file in the same project as the file visited by the current buffer."
   (interactive)
   (let ((total 0))
     (message "Opening files...")
