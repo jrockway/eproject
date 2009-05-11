@@ -402,7 +402,7 @@ project root PROJECT-ROOT."
 (defun eproject-kill-project-buffers ()
   (interactive)
   (with-each-buffer-in-project ()
-      (kill-buffer)))
+      (kill-buffer buf)))
 
 (defun eproject-open-all-project-files ()
   (interactive)
