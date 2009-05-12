@@ -35,9 +35,9 @@
 ;; The main starting point for eproject is defining project types.
 ;; There is a macro for this, define-project-type, that accepts four
 ;; arguments, the type name (a symbol), a list of supertypes (for
-;; inheriting properties) a form that is executed to determine whether
-;; a file is a member of a project, and then a free-form property
-;; list.  An example will clear things up.
+;; inheriting properties), a form that is executed to determine
+;; whether a file is a member of a project, and then a free-form
+;; property list.  An example will clear things up.
 ;;
 ;; Let's create a "perl" project type, for Perl projects that have a
 ;; Makefile.PL.
