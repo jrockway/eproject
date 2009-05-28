@@ -264,6 +264,10 @@ what to look for.  Some examples:
 
 (defun* eproject--run-project-selector (type &optional (file (buffer-file-name)))
   "Run the selector associated with project type TYPE."
+  (when (not file)
+    (cond ((eq major-mode 'dired-mode)
+           (setq file (expand-file-name dired-directory)))
+          (t (error "Buffer '%s' has no file name" (current-buffer)))))
   (flet ((look-for (expr &optional expr-type)
                    (funcall #'eproject--look-for-impl file expr expr-type)))
     (funcall (eproject--project-selector type) file)))
@@ -461,7 +465,7 @@ else through unchanged."
   "Assert that the current buffer is in a project of type TYPE."
   (when (not (memq type (eproject--linearized-isa (eproject-type) t)))
     (error (format "%s is not in a project of type %s!"
-                   (buffer-file-name) type))))
+                   (current-buffer) type))))
 
 ;; support for visiting other project files
 
@@ -589,6 +593,7 @@ project root PROJECT-ROOT."
 ;; finish up
 
 (add-hook 'find-file-hook #'eproject-maybe-turn-on)
+(add-hook 'dired-mode-hook #'eproject-maybe-turn-on)
 
 (provide 'eproject)
 
