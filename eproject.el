@@ -24,7 +24,7 @@
 ;; License along with this program; if not, write to the Free
 ;; Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
 ;; MA 02111-1307, USA.
-;;
+
 ;;; Commentary
 ;;
 ;; Eproject is an extension that lets you group related files together
@@ -109,8 +109,8 @@
 ;; $ git clone git://github.com/jrockway/eproject
 ;;
 ;; Share and enjoy.
-;;
-;; Bugs:
+
+;;; Bugs:
 ;;
 ;; You can't forward reference supertypes -- this will mess things up
 ;; internally, but you won't get a warning.  This can be easily fixed
@@ -119,7 +119,7 @@
 ;; The "linearized isa" (i.e. "class precedence list") is computed
 ;; with a depth-first search.  This is bad; we should really use the
 ;; C3 ordering.
-;;
+
 ;;; Website:
 ;;
 ;; The latest version is on github at
