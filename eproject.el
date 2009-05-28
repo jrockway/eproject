@@ -128,7 +128,14 @@
 ;; The wiki has lots more documentation:
 ;; http://wiki.github.com/jrockway/eproject
 ;;
+
 ;;; Changelog:
+;;
+;; 1.4 (Thu May 28 02:21:40 MST 2009)
+;;
+;; * Add support for "instance" metadata, instead of "class" (project)
+;;   metadata
+;;
 ;; 1.3 (Wed May 27 20:47:48 MST 2009)
 ;;
 ;; * Officially support w32
@@ -243,10 +250,15 @@ what to look for.  Some examples:
   ;; is forward-referenced.
  (reverse (mapcar #'car eproject-project-types)))
 
-(defun eproject-get-project-metadatum (type key)
+;; metadata vs. attributes:
+;; * metadata is per-project-type
+;; * attributes are per-project-root (and includes the project-type metadata)
+(defun eproject--compute-all-applicable-metadata (type)
   (loop for next-type in (eproject--linearized-isa type t)
-        do (let ((result (getf (nth 3 (eproject--type-info next-type)) key)))
-             (if result (return result)))))
+        nconc (nth 3 (eproject--type-info next-type))))
+
+(defun eproject-get-project-metadatum (type key)
+  (getf (eproject--compute-all-applicable-metadata type) key))
 
 (defun eproject-add-project-metadatum (type key value)
   (setf (getf (nth 3 (assoc type eproject-project-types)) key) value))
@@ -254,30 +266,55 @@ what to look for.  Some examples:
 (defvar eproject-root nil
   "A buffer-local variable set to the root of its eproject project.  NIL if it isn't in an eproject.")
 
-(defvar eproject-type nil
-  "A buffer-local variable set to the type of this buffer's eproject project.  NIL if the buffer isn't in an eproject.")
-
-(defvar eproject-name nil
-  "A buffer-local variable set to the name of this buffer's eproject project.  NIL if the buffer isn't in an eproject.")
-
 (make-variable-buffer-local 'eproject-root)
-(make-variable-buffer-local 'eproject-type)
-(make-variable-buffer-local 'eproject-name)
+
+(defmacro* eproject--do-in-buffer ((buffer) &body forms)
+  `(with-current-buffer ,buffer
+     (when (not eproject-mode)
+       (error "Buffer is not an eproject buffer!"))
+     ,@forms))
+
+(defun* eproject-root (&optional (buffer (current-buffer)))
+  "Return the value of the eproject variable root.
+BUFFER defaults to the current buffer"
+  (eproject--do-in-buffer (buffer) eproject-root))
+
+(defvar eproject-attributes-alist nil
+  "An alist of project root -> plist of project metadata.")
+
+(defun* eproject-attribute (key &optional (buffer (current-buffer)))
+  "Lookup the attribute KEY for the eproject of BUFFER.
+BUFFER defaults to the current buffer."
+  (with-current-buffer buffer
+    (getf (cdr (assoc (eproject-root) eproject-attributes-alist)) key)))
+
+(defun eproject--known-project-roots ()
+  "Return a list of projects roots that have been visisted this session."
+  (loop for (key . value) in eproject-attributes-alist collect key))
 
 (defmacro define-eproject-accessor (variable)
-  "Create a function named eproject-VARIABLE that returns the value of VARIABLE in the context of the current project."
+  "Create a function named eproject-VARIABLE that return the value of VARIABLE in the context of the current project."
   (let ((sym (intern (format "eproject-%s" variable))))
   `(defun* ,sym
        (&optional (buffer (current-buffer)))
      ,(format "Return the value of the eproject variable %s.  BUFFER defaults to the current buffer." variable)
-     (with-current-buffer buffer
-       (when (not eproject-mode)
-         (error "Buffer is not an eproject buffer!"))
-       ,sym))))
+     (eproject-attribute ,(intern (format ":%s" variable))))))
 
-(define-eproject-accessor root)
 (define-eproject-accessor type)
 (define-eproject-accessor name)
+
+(defun eproject--init-attributes (root type)
+  (let ((project-data (assoc root eproject-attributes-alist)))
+    (when (null project-data)
+      ;; start with "class" data
+      (let* ((class-data
+             (loop for i in (eproject--compute-all-applicable-metadata type)
+                   collect (if (functionp i) (funcall i root) i)))
+             (name (or (getf class-data :project-name)
+                       (directory-file-name
+                        (elt (reverse (eshell-split-path root)) 0)))))
+        (add-to-list 'eproject-attributes-alist
+                     (cons root (nconc (list :type type :name name) class-data)))))))
 
 (define-minor-mode eproject-mode
   "A minor mode for buffers that are a member of an eproject project."
@@ -293,18 +330,10 @@ what to look for.  Some examples:
   (loop for type in (eproject--all-types)
         do (let ((root (eproject--run-project-selector type)))
              (when root
-               (setq eproject-type type)
                (setq eproject-root (file-name-as-directory root))
-               (let ((compute-project-name
-                      (eproject-get-project-metadatum eproject-type :project-name)))
-                 (setq eproject-name
-                       (or (and (functionp compute-project-name)
-                                (ignore-errors
-                                  (funcall compute-project-name eproject-root)))
-                           (directory-file-name
-                            (elt (reverse (eshell-split-path eproject-root)) 0)))))
-               (add-to-list 'eproject-project-names eproject-name)
+               (eproject--init-attributes eproject-root type)
                (eproject-mode 1)
+               (add-to-list 'eproject-project-names (eproject-name))
                (run-hooks (intern (format "%s-project-file-visit-hook" type)))
                (return root)))))
 
