@@ -5,7 +5,7 @@
 ;; Author: Jonathan Rockway <jon@jrock.us>
 ;; Maintainer: Jonathan Rockway <jon@jrock.us>
 ;; Created: 20 Nov 2008
-;; Version: 1.1
+;; Version: 1.3
 ;; Keywords: programming, projects
 ;;
 ;; This file is not a part of GNU Emacs.
@@ -126,6 +126,10 @@
 ;; http://github.com/jrockway/eproject/tree/master
 ;;
 ;;; Changelog:
+;; 1.3 (Wed May 27 20:47:48 MST 2009)
+;;
+;; * Officially support w32
+;;
 ;; 1.2 (Thu May  7 02:18:01 CDT 2009)
 ;;
 ;; * Add ibuffer support
@@ -142,6 +146,7 @@
 ;;; Code:
 
 (require 'cl)
+(require 'eshell)   ;; For portable path handling
 
 (defgroup eproject nil "eproject" :prefix "eproject-")
 
@@ -162,19 +167,24 @@ project root if it is of this type of project, or NIL otherwise."
                            (lambda (file) ,selector)
                            ',metadata))))))
 
+(defun eproject--build-parent-candidates (start-at)
+  "Given directory START-AT, return a list of parent directories, including START-AT."
+    (loop for x on (reverse (eshell-split-path start-at)) by #'cdr
+          ;; i think eshell-split-path guarantees the
+          ;; file-name-as-directory application, but i don't want to
+          ;; debug it if it doesn't :)
+          collect (file-name-as-directory (apply #'concat (reverse x)))))
+
 (defun eproject--scan-parents-for (start-at predicate)
-  "Call PREDICATE with each parent directory of START-AT, returning the
-path to the first directory where PREDICATE returns T."
-  (cond ((funcall predicate start-at) start-at)
-        ((not (equal start-at "/"))
-         (eproject--scan-parents-for
-          (expand-file-name (concat start-at "/" "..")) predicate))
-        (t nil)))
+  "Call PREDICATE with each parent directory of START-AT, returning the path to the first directory where PREDICATE returns T."
+  (find-if predicate (eproject--build-parent-candidates
+                          (file-name-as-directory start-at))))
 
 (defun eproject--find-file-named (start-at filename)
+  "Starting in directory START-AT, recursively check parent directories for a file named FILENAME.  Return the directory where the file is first found; return NIL otherwise."
   (eproject--scan-parents-for start-at
-   (lambda (directory)
-     (file-exists-p (concat directory "/" filename)))))
+   (lambda (directory) ; note that directory always has the path separator on the end
+     (file-exists-p (concat directory filename)))))
 
 (define-project-type generic () nil :relevant-files ("^[^.]"))
 (define-project-type generic-git (generic) (look-for ".git"))
