@@ -394,7 +394,7 @@ to select from, open file when selected."
 (require 'ibuffer)  ;; obviously this could be made optional, but
 (require 'ibuf-ext) ;; ibuffer is core, so this should not be harmful
 
-(define-ibuffer-filter eproject
+(define-ibuffer-filter eproject-root
     "Filter buffers that have the provided eproject root"
   (:reader (read-directory-name "Project root: " (ignore-errors (eproject-root)))
            :description "project root")
@@ -402,12 +402,21 @@ to select from, open file when selected."
     (equal (file-name-as-directory (expand-file-name qualifier))
            (ignore-errors (eproject-root)))))
 
+(define-ibuffer-filter eproject
+    "Filter buffers that have the provided eproject name"
+  (:reader (funcall eproject-completing-read-function
+                    "Project name: " eproject-project-names)
+           :description "project name")
+  (with-current-buffer buf
+    (equal qualifier
+           (ignore-errors (eproject-name)))))
+
 (defun* eproject-ibuffer (&optional (project-root (eproject-root)))
   "Open an IBuffer window showing all buffers with the
 project root PROJECT-ROOT."
   (interactive)
   (ibuffer nil "*Project Buffers*"
-           (list (cons 'eproject project-root))))
+           (list (cons 'eproject-root project-root))))
 
 ;; extra macros
 (defmacro* with-each-buffer-in-project
