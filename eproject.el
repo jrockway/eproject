@@ -199,7 +199,8 @@ project root if it is of this type of project, or NIL otherwise."
    (lambda (directory) ; note that directory always has the path separator on the end
      (file-exists-p (concat directory filename)))))
 
-(define-project-type generic () nil :relevant-files ("^[^.]"))
+(define-project-type generic () nil :relevant-files ("^[^.]") :config-file ".eproject")
+(define-project-type generic-eproject (generic) (look-for ".eproject"))
 (define-project-type generic-git (generic) (look-for ".git"))
 
 (defun eproject--type-info (type)
@@ -303,18 +304,57 @@ BUFFER defaults to the current buffer."
 (define-eproject-accessor type)
 (define-eproject-accessor name)
 
+(defun eproject-reinitialize-project ()
+  "Forget all project settings for the current eproject, then reload them."
+  (interactive)
+  (let ((root (eproject-root)))
+    (setf eproject-attributes-alist
+          (delete-if (lambda (x) (equal (car x) root))
+                     eproject-attributes-alist)))
+  (eproject-maybe-turn-on))
+
 (defun eproject--init-attributes (root type)
+  "Update the EPROJECT-ATTRIBUTES-ALIST for the project rooted at ROOT (of TYPE)."
   (let ((project-data (assoc root eproject-attributes-alist)))
     (when (null project-data)
-      ;; start with "class" data
       (let* ((class-data
              (loop for i in (eproject--compute-all-applicable-metadata type)
                    collect (if (functionp i) (funcall i root) i)))
-             (name (or (getf class-data :project-name)
+
+             ;; read the .eproject (or whatever) file
+             (config-file
+              (concat root (getf class-data :config-file ".eproject")))
+             (config-file-contents
+              (with-temp-buffer
+                (ignore-errors (insert-file-contents config-file nil nil nil t))
+                (buffer-substring-no-properties (point-min) (point-max))))
+             (config-file-sexp
+              (read (format "(list %s)" config-file-contents)))
+             (data-is-unsafe (unsafep config-file-sexp))
+             (config-file-data
+              (cond ((not config-file-sexp) nil)
+                    (data-is-unsafe
+                     (warn "Config file %s contains unsafe data (%s), ignoring!"
+                      config-file data-is-unsafe)
+                     nil)
+                    (t (nconc
+                        (list :loaded-from-config-file config-file)
+                        (eval config-file-sexp)))))
+
+             ;; combine class and config data; config overriding class
+             (data (cond
+                    ;; ensure that the config-file-data is really a plist
+                    ((evenp (length config-file-data))
+                     (nconc config-file-data class-data))
+                    (t class-data)))
+
+             ;; now compute the final list of attributes
+             (name (or (getf data :project-name)
                        (directory-file-name
                         (elt (reverse (eshell-split-path root)) 0)))))
+
         (add-to-list 'eproject-attributes-alist
-                     (cons root (nconc (list :type type :name name) class-data)))))))
+                     (cons root (nconc (list :type type :name name) data)))))))
 
 (define-minor-mode eproject-mode
   "A minor mode for buffers that are a member of an eproject project."
