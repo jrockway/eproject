@@ -141,7 +141,6 @@
 
 ;;; Code:
 
-(require 'iswitchb)
 (require 'cl)
 
 (defgroup eproject nil "eproject" :prefix "eproject-")
@@ -309,6 +308,7 @@ what to look for.  Some examples:
   "Use completing-read to do a completing read."
   (completing-read prompt choices nil t))
 
+(require 'iswitchb) ;; If this causes problems, you can comment and do without
 (defun eproject--icompleting-read (prompt choices)
   "Use iswitchb to do a completing read."
   (let ((iswitchb-make-buflist-hook
