@@ -449,8 +449,9 @@ project root PROJECT-ROOT."
   (interactive)
   (let ((total 0))
     (message "Opening files...")
-    (loop for file in (eproject-list-project-files)
-          do (progn (find-file file) (incf total)))
+    (save-window-excursion
+      (loop for file in (eproject-list-project-files)
+            do (progn (find-file file) (incf total))))
     (message "Opened %d files" total)))
 
 
