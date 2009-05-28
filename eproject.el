@@ -251,8 +251,12 @@ what to look for.  Some examples:
 (defvar eproject-type nil
   "A buffer-local variable set to the type of this buffer's eproject project.  NIL if the buffer isn't in an eproject.")
 
+(defvar eproject-name nil
+  "A buffer-local variable set to the name of this buffer's eproject project.  NIL if the buffer isn't in an eproject.")
+
 (make-variable-buffer-local 'eproject-root)
 (make-variable-buffer-local 'eproject-type)
+(make-variable-buffer-local 'eproject-name)
 
 (defmacro define-eproject-accessor (variable)
   "Create a function named eproject-VARIABLE that returns the value of VARIABLE in the context of the current project."
@@ -267,6 +271,7 @@ what to look for.  Some examples:
 
 (define-eproject-accessor root)
 (define-eproject-accessor type)
+(define-eproject-accessor name)
 
 (define-minor-mode eproject-mode
   "A minor mode for buffers that are a member of an eproject project."
@@ -284,6 +289,14 @@ what to look for.  Some examples:
              (when root
                (setq eproject-type type)
                (setq eproject-root (file-name-as-directory root))
+               (let ((compute-project-name
+                      (eproject-get-project-metadatum eproject-type :project-name)))
+                 (setq eproject-name
+                       (or (and (functionp compute-project-name)
+                                (ignore-errors
+                                  (funcall compute-project-name eproject-root)))
+                           (directory-file-name
+                            (elt (reverse (eshell-split-path eproject-root)) 0)))))
                (eproject-mode 1)
                (run-hooks (intern (format "%s-project-file-visit-hook" type)))
                (return root)))))
