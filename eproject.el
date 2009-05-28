@@ -5,7 +5,7 @@
 ;; Author: Jonathan Rockway <jon@jrock.us>
 ;; Maintainer: Jonathan Rockway <jon@jrock.us>
 ;; Created: 20 Nov 2008
-;; Version: 1.3
+;; Version: 1.4
 ;; Keywords: programming, projects
 ;;
 ;; This file is not a part of GNU Emacs.
@@ -161,15 +161,45 @@
 (defgroup eproject nil "eproject" :prefix "eproject-")
 
 (defvar eproject-project-types nil
-  "An alist of PROJECT to (supertypes selector metadata-plist) pairs.")
+  "An alist of project type name to (supertypes selector metadata-plist) pairs.")
 
 (defvar eproject-project-names nil
   "A list of project names known to emacs.  Populated as projects are opened, but may be prepopulated via .emacs if desired.")
 
+(defvar eproject-extra-attributes nil
+  "A list of pairs used to assign attributes to projects.
+
+Each entry can be in the form of `(FUNCTION (ATTRIBUTES))'
+or `((KEY . TYPE) (ATTRIBUTES))'.
+
+If FUNCTION is specified, it will be evaluated for each project
+root.  If it returns a non-nil value, ATTRIBUTES will be added to
+the project attributes.
+
+If `(KEY . TYPE)' is specified, then TYPE is either
+`:root-regexp' or `:project-name' and KEY is interpreted
+accordingly.  If KEY matches a project root, its ATTRIBUTES are
+applied.
+
+ATTRIBUTES is a plist of attributes.")
+
+(defun define-project-attribute (key attributes)
+  "Define extra attributes to be applied to projects.
+
+See `eproject-extra-attributes' for details on the format of KEY
+and ATTRIBUTES."
+  (check-type key (or function cons))
+  (check-type attributes list)
+  (add-to-list 'eproject-extra-attributes (list key attributes)))
+
 (defmacro define-project-type (type supertypes selector &rest metadata)
   "Define a new project type TYPE that inherits from SUPERTYPES.
+
 SELECTOR is a form that is given a filename FILE and returns the
-project root if it is of this type of project, or NIL otherwise."
+project root if it is of this type of project, or NIL otherwise.
+
+Optional argument METADATA is a plist of metadata that will
+become project attributes."
   `(progn
      (defvar ,(intern (format "%s-project-file-visit-hook" type)) nil
        ,(format "Hooks that will be run when a file in a %s project is opened." type))
@@ -256,7 +286,7 @@ what to look for.  Some examples:
 ;; * attributes are per-project-root (and includes the project-type metadata)
 (defun eproject--compute-all-applicable-metadata (type)
   (loop for next-type in (eproject--linearized-isa type t)
-        nconc (nth 3 (eproject--type-info next-type))))
+        append (nth 3 (eproject--type-info next-type))))
 
 (defun eproject-get-project-metadatum (type key)
   (getf (eproject--compute-all-applicable-metadata type) key))
@@ -313,13 +343,36 @@ BUFFER defaults to the current buffer."
                      eproject-attributes-alist)))
   (eproject-maybe-turn-on))
 
+(defun eproject--eval-user-data (project-name root)
+  "Interpret EPROJECT-EXTRA-ATTRIBUTES for PROJECT-NAME (in ROOT)."
+  (loop for (key attributes) in eproject-extra-attributes append
+        (cond ((functionp key)
+               (if (funcall key root) attributes nil))
+              ((not (listp key))
+               (error "Bad eproject user data (%s %s), %s must be a list/function"
+                      key attributes key))
+              ((and (eq (cdr key) :project-name)
+                    (equal (car key) project-name))
+               attributes)
+              ((and (eq (cdr key) :root-regexp)
+                    (string-match (car key) root))
+               attributes)
+              (t nil))))
+
+(defun eproject--interpret-metadata (data root)
+  "Interpret DATA with respect to ROOT.
+
+This mostly means evaluating functions and passing everything
+else through unchanged."
+  (loop for i in data collect (if (functionp i) (funcall i root) i)))
+
 (defun eproject--init-attributes (root type)
   "Update the EPROJECT-ATTRIBUTES-ALIST for the project rooted at ROOT (of TYPE)."
   (let ((project-data (assoc root eproject-attributes-alist)))
     (when (null project-data)
-      (let* ((class-data
-             (loop for i in (eproject--compute-all-applicable-metadata type)
-                   collect (if (functionp i) (funcall i root) i)))
+      (let* ((class-data (eproject--interpret-metadata
+                          (eproject--compute-all-applicable-metadata type)
+                          root))
 
              ;; read the .eproject (or whatever) file
              (config-file
@@ -332,26 +385,35 @@ BUFFER defaults to the current buffer."
               (read (format "(list %s)" config-file-contents)))
              (data-is-unsafe (unsafep config-file-sexp))
              (config-file-data
-              (cond ((not config-file-sexp) nil)
-                    (data-is-unsafe
+              (cond (data-is-unsafe
                      (warn "Config file %s contains unsafe data (%s), ignoring!"
                       config-file data-is-unsafe)
                      nil)
-                    (t (nconc
-                        (list :loaded-from-config-file config-file)
-                        (eval config-file-sexp)))))
+                    (t (let ((data (eval config-file-sexp)))
+                         (if data (nconc
+                                   (list :loaded-from-config-file config-file)
+                                   data)
+                           nil)))))
 
              ;; combine class and config data; config overriding class
-             (data (cond
+             (class-and-config-data (cond
                     ;; ensure that the config-file-data is really a plist
                     ((evenp (length config-file-data))
                      (nconc config-file-data class-data))
                     (t class-data)))
 
-             ;; now compute the final list of attributes
-             (name (or (getf data :project-name)
+             ;; calculate the project name, as it's used by "user data"
+             (name (or (getf class-and-config-data :project-name)
                        (directory-file-name
-                        (elt (reverse (eshell-split-path root)) 0)))))
+                        (elt (reverse (eshell-split-path root)) 0))))
+
+             ;; finally, merge in the "user data"
+             (user-data
+              (eproject--interpret-metadata
+               (eproject--eval-user-data name root) root))
+
+             ;; now compute the final list of attributes
+             (data (nconc user-data class-and-config-data)))
 
         (add-to-list 'eproject-attributes-alist
                      (cons root (nconc (list :type type :name name) data)))))))
