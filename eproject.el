@@ -120,10 +120,13 @@
 ;; with a depth-first search.  This is bad; we should really use the
 ;; C3 ordering.
 ;;
-;; Website:
+;;; Website:
 ;;
 ;; The latest version is on github at
 ;; http://github.com/jrockway/eproject/tree/master
+;;
+;; The wiki has lots more documentation:
+;; http://wiki.github.com/jrockway/eproject
 ;;
 ;;; Changelog:
 ;; 1.3 (Wed May 27 20:47:48 MST 2009)
