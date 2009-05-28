@@ -153,6 +153,9 @@
 (defvar eproject-project-types nil
   "An alist of PROJECT to (supertypes selector metadata-plist) pairs.")
 
+(defvar eproject-project-names nil
+  "A list of project names known to emacs.  Populated as projects are opened, but may be prepopulated via .emacs if desired.")
+
 (defmacro define-project-type (type supertypes selector &rest metadata)
   "Define a new project type TYPE that inherits from SUPERTYPES.
 SELECTOR is a form that is given a filename FILE and returns the
@@ -297,6 +300,7 @@ what to look for.  Some examples:
                                   (funcall compute-project-name eproject-root)))
                            (directory-file-name
                             (elt (reverse (eshell-split-path eproject-root)) 0)))))
+               (add-to-list 'eproject-project-names eproject-name)
                (eproject-mode 1)
                (run-hooks (intern (format "%s-project-file-visit-hook" type)))
                (return root)))))
