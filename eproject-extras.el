@@ -50,9 +50,11 @@ to select from, open file when selected."
   (let ((iswitchb-make-buflist-hook
          (lambda ()
            (setq iswitchb-temp-buflist choices))))
-    (when (not iswitchb-mode)
-      (add-hook 'minibuffer-setup-hook 'iswitchb-minibuffer-setup))
-    (prog1 (iswitchb-read-buffer prompt nil t)
+    (unwind-protect
+        (progn
+          (when (not iswitchb-mode)
+            (add-hook 'minibuffer-setup-hook 'iswitchb-minibuffer-setup))
+          (iswitchb-read-buffer prompt nil t))
       (when (not iswitchb-mode)
         (remove-hook 'minibuffer-setup-hook 'iswitchb-minibuffer-setup)))))
 
