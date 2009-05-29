@@ -124,6 +124,21 @@
 
 ;; Everything else is internals, and subject to change.
 
+;;; Public commands:
+
+;; eproject-maybe-turn-on
+;;
+;; - turn on eproject for the current buffer, if possible
+;;   (if it's turned on, the hooks will be run)
+
+;; eproject-reinitialize-project
+;;
+;; - re-read config for the current project, then run
+;;   eproject-maybe-turn-on
+
+;; See eproject-extras.el for more interesting / useful commands.
+;; This file is mostly "plumbing".
+
 ;;; Bugs:
 ;;
 ;; You can't forward reference supertypes -- this will mess things up
