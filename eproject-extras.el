@@ -24,6 +24,32 @@
 ;; bloated, and not strictly necessary.  So now it lives here, leaving
 ;; the eproject core pristine and minimal.
 
+;;; User-visible commands:
+
+;; eproject-find-file
+;;
+;; - easily visit another file in the current project
+
+;; eproject-ibuffer
+;;
+;; - open an ibuffer with current project buffers (or other project if
+;;   invoked with prefix arg)
+
+;; eproject-kill-project-buffers
+;;
+;; - kill all of the current project's buffers (or other project if
+;;   prefixed)
+
+;; eproject-open-all-project-files
+;;
+;; - open all files in the current project (or other project if
+;;   prefixed)
+
+;; eproject-revisit-project
+;;
+;; - open the named project root, or a project file if prefixed
+
+
 ;;; Code:
 
 (require 'eproject)
@@ -84,6 +110,19 @@ list of files; used by `eproject-find-file'."
   (let ((show (mapcar (lambda (x) (car x)) alist)))
     (cdr (assoc (eproject--do-completing-read prompt show) alist))))
 
+(defun eproject--get-name-root-alist ()
+  (loop for (root . attrs) in eproject-attributes-alist
+        collect (cons (getf attrs :name) root)))
+
+(defun eproject--read-project-name ()
+  (eproject--icomplete-read-with-alist
+   "Project name: " (eproject--get-name-root-alist)))
+
+(defun eproject--handle-root-prefix-arg (prefix)
+  (if (= prefix 4)
+      (eproject--read-project-name)
+    (eproject-root)))
+
 ;; ibuffer support
 
 (define-ibuffer-filter eproject-root
@@ -102,15 +141,19 @@ list of files; used by `eproject-find-file'."
     (equal qualifier
            (ignore-errors (eproject-name)))))
 
-(defun* eproject-ibuffer (&optional (project-root (eproject-root)))
-  "Open an IBuffer window showing all buffers with the project root PROJECT-ROOT."
-  (interactive)
-  (ibuffer nil "*Project Buffers*"
-           (list (cons 'eproject-root project-root))))
+(defun eproject-ibuffer (prefix)
+  "Open an IBuffer window showing all buffers in the current project, or named project if PREFIX arg is supplied."
+  (interactive "p")
+  (if (= prefix 4)
+      (call-interactively #'eproject--ibuffer-byname)
+    (ibuffer nil "*Project Buffers*"
+             (list (cons 'eproject-root (eproject-root))))))
 
-(defun eproject-ibuffer-byname (project-name)
+(defun eproject--ibuffer-byname (project-name)
   "Open an IBuffer window showing all buffers in the project named PROJECT-NAME."
-  (interactive (list (eproject--do-completing-read "Project name: " eproject-project-names)))
+  (interactive (list
+                (eproject--do-completing-read
+                 "Project name: " eproject-project-names)))
   (ibuffer nil (format "*%s Buffers*" project-name)
            (list (cons 'eproject project-name))))
 
@@ -121,11 +164,10 @@ list of files; used by `eproject-find-file'."
      &body body)
   "Given a project root PROJECT-ROOT, finds each buffer visiting a file in that project, and executes BODY with each buffer bound to BINDING (and made current)."
   (declare (indent 2))
-  (let ((root-sym (gensym)))
+  (let* ((root-sym (gensym)))
     `(progn
-       (let ((,root-sym
-              (if ,project-root ,project-root
-                (eproject-root))))
+       (let ((,root-sym ,project-root))
+         (when (not ,root-sym) (setq ,root-sym (eproject-root)))
          (loop for ,binding in (buffer-list)
                do
                (with-current-buffer ,binding
@@ -134,17 +176,25 @@ list of files; used by `eproject-find-file'."
                      ,@body))))))))
 
 ;; bulk management utils
+(defun eproject-kill-project-buffers (prefix)
+  "Kill every buffer in the current project, including the current buffer.
 
-(defun eproject-kill-project-buffers ()
-  "Kill every buffer in the current project, including the current buffer."
-  (interactive)
-  (with-each-buffer-in-project (buf)
-      (kill-buffer buf)))
+If PREFIX is specified, prompt for a project name and kill those
+buffers instead."
+  (interactive "p")
+  (with-each-buffer-in-project
+      (buf (eproject--handle-root-prefix-arg prefix))
+    (kill-buffer buf)))
 
-(defun eproject-open-all-project-files ()
-  "Open every file in the same project as the file visited by the current buffer."
-  (interactive)
-  (let ((total 0))
+(defun eproject-open-all-project-files (prefix)
+  "Open every file in the same project.
+
+If PREFIX arg is supplied, prompt for a project.  Otherwise,
+assume the project of the current buffer."
+  (interactive "p")
+  (let ((total 0)
+        (eproject-root (eproject--handle-root-prefix-arg prefix))
+        (eproject-mode t))
     (message "Opening files...")
     (save-window-excursion
       (loop for file in (eproject-list-project-files)
@@ -153,17 +203,13 @@ list of files; used by `eproject-find-file'."
 
 ;; project management
 
-(defun eproject--get-name-root-alist ()
-  (loop for (root . attrs) in eproject-attributes-alist
-        collect (cons (getf attrs :name) root)))
-
 (defun eproject-revisit-project (prefix)
   "Given a project name, visit the root directory.
 
 If PREFIX arg is supplied, run `eproject-find-file'."
   (interactive "p")
-  (let ((eproject-root (eproject--icomplete-read-with-alist
-              "Project name: " (eproject--get-name-root-alist))))
+  (let ((eproject-root (eproject--read-project-name))
+        (eproject-mode t)) ;; XXX: very messy, needs rewrite
     (if (= prefix 4)
           (eproject-find-file)
       (find-file eproject-root))))
