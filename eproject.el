@@ -122,7 +122,10 @@
 ;; - returns the value of key for the project that buffer is a member
 ;;   of.  buffer defaults to the current buffer.
 
-;; Everything else is internals, and subject to change.
+;; define-project-type
+;; define-project-attribute
+
+;; Everything else is mostly used internally, and may change.
 
 ;;; Public commands:
 
