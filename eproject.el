@@ -102,13 +102,27 @@
 ;; That's basically all there is.  eproject is designed to be minimal and
 ;; extensible, so I hope it meets your needs.
 ;;
-;; Please do not hesitate to e-mail or find me on #emacs (jrockway) if
-;; you have questions.  If you'd like to send a patch (always appreciated),
+;; Please e-mail me or find me on #emacs (jrockway) if you have
+;; questions.  If you'd like to send a patch (always appreciated),
 ;; please diff against the latest git version, available by running:
 ;;
 ;; $ git clone git://github.com/jrockway/eproject
 ;;
 ;; Share and enjoy.
+
+;;; Public API:
+
+;; eproject-root (&optional buffer)
+;;
+;; - returns the project root for the project that buffer is a member
+;;   of. defaults to the current buffer
+
+;; eproject-attribute (key &optional buffer)
+;;
+;; - returns the value of key for the project that buffer is a member
+;;   of.  buffer defaults to the current buffer.
+
+;; Everything else is internals, and subject to change.
 
 ;;; Bugs:
 ;;
