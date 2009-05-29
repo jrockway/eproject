@@ -115,20 +115,23 @@ list of files; used by `eproject-find-file'."
            (list (cons 'eproject project-name))))
 
 ;; extra macros
+
 (defmacro* with-each-buffer-in-project
     ((binding &optional project-root)
      &body body)
   "Given a project root PROJECT-ROOT, finds each buffer visiting a file in that project, and executes BODY with each buffer bound to BINDING (and made current)."
   (declare (indent 2))
-  `(progn
-     (when (not ,project-root)
-       (setf project-root (eproject-root)))
-     (loop for ,binding in (buffer-list)
-         do
-         (with-current-buffer ,binding
-           (let ((detected-root (ignore-errors (eproject-root))))
-             (when (and detected-root (equal project-root detected-root))
-               ,@body))))))
+  (let ((root-sym (gensym)))
+    `(progn
+       (let ((,root-sym
+              (if ,project-root ,project-root
+                (eproject-root))))
+         (loop for ,binding in (buffer-list)
+               do
+               (with-current-buffer ,binding
+                 (let ((detected-root (ignore-errors (eproject-root))))
+                   (when (and detected-root (equal ,root-sym detected-root))
+                     ,@body))))))))
 
 ;; bulk management utils
 
