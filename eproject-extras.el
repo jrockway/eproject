@@ -75,43 +75,49 @@ list of files; used by `eproject-find-file'."
                                eproject--ido-completing-read)
                 (function)))
 
+(defun eproject--do-completing-read (&rest args)
+  "Do a completing read with the user's favorite completing read function."
+  (apply eproject-completing-read-function args))
+
 (defun eproject--icomplete-read-with-alist (prompt alist)
   (let ((show (mapcar (lambda (x) (car x)) alist)))
-    (cdr (assoc (funcall eproject-completing-read-function prompt show) alist))))
+    (cdr (assoc (eproject--do-completing-read prompt show) alist))))
 
 ;; ibuffer support
 
 (define-ibuffer-filter eproject-root
     "Filter buffers that have the provided eproject root"
   (:reader (read-directory-name "Project root: " (ignore-errors (eproject-root)))
-           :description "project root")
+   :description "project root")
   (with-current-buffer buf
     (equal (file-name-as-directory (expand-file-name qualifier))
            (ignore-errors (eproject-root)))))
 
 (define-ibuffer-filter eproject
     "Filter buffers that have the provided eproject name"
-  (:reader (funcall eproject-completing-read-function
-                    "Project name: " eproject-project-names)
-           :description "project name")
+  (:reader (eproject--do-completing-read "Project name: " eproject-project-names)
+   :description "project name")
   (with-current-buffer buf
     (equal qualifier
            (ignore-errors (eproject-name)))))
 
 (defun* eproject-ibuffer (&optional (project-root (eproject-root)))
-  "Open an IBuffer window showing all buffers with the
-project root PROJECT-ROOT."
+  "Open an IBuffer window showing all buffers with the project root PROJECT-ROOT."
   (interactive)
   (ibuffer nil "*Project Buffers*"
            (list (cons 'eproject-root project-root))))
+
+(defun eproject-ibuffer-byname (project-name)
+  "Open an IBuffer window showing all buffers in the project named PROJECT-NAME."
+  (interactive (list (eproject--do-completing-read "Project name: " eproject-project-names)))
+  (ibuffer nil (format "*%s Buffers*" project-name)
+           (list (cons 'eproject project-name))))
 
 ;; extra macros
 (defmacro* with-each-buffer-in-project
     ((binding &optional (project-root (eproject-root)))
      &body body)
-  "Given a project root PROJECT-ROOT, finds each buffer visiting a file in that project, and executes BODY with each buffer bound to BINDING (and made current).
-
-\(fn (BINDING &optional PROJECT-ROOT) &body BODY)"
+  "Given a project root PROJECT-ROOT, finds each buffer visiting a file in that project, and executes BODY with each buffer bound to BINDING (and made current)."
   (declare (indent 2))
   `(loop for ,binding in (buffer-list)
          do
