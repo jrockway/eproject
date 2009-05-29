@@ -27,6 +27,7 @@
 ;;; Code:
 
 (require 'eproject)
+(require 'cl)
 (require 'iswitchb)
 (require 'ibuffer)
 (require 'ibuf-ext)
@@ -143,6 +144,23 @@ list of files; used by `eproject-find-file'."
       (loop for file in (eproject-list-project-files)
             do (progn (find-file file) (incf total))))
     (message "Opened %d files" total)))
+
+;; project management
+
+(defun eproject--get-name-root-alist ()
+  (loop for (root . attrs) in eproject-attributes-alist
+        collect (cons (getf attrs :name) root)))
+
+(defun eproject-revisit-project (prefix)
+  "Given a project name, visit the root directory.
+
+If PREFIX arg is supplied, run `eproject-find-file'."
+  (interactive "p")
+  (let ((eproject-root (eproject--icomplete-read-with-alist
+              "Project name: " (eproject--get-name-root-alist))))
+    (if (= prefix 4)
+          (eproject-find-file)
+      (find-file eproject-root))))
 
 (provide 'eproject-extras)
 ;;; eproject-extras.el ends here
