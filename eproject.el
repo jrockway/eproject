@@ -5,7 +5,7 @@
 ;; Author: Jonathan Rockway <jon@jrock.us>
 ;; Maintainer: Jonathan Rockway <jon@jrock.us>
 ;; Created: 20 Nov 2008
-;; Version: 1.4
+;; Version: 1.5
 ;; Keywords: programming, projects
 ;;
 ;; This file is not a part of GNU Emacs.
@@ -130,6 +130,10 @@
 ;;
 
 ;;; Changelog:
+;; 1.5 (Thu May 28 21:38:08 MST 2009)
+;;
+;; * Split out the non-core stuff into eproject-extras.el.
+;;   (slime-contrib style)
 ;;
 ;; 1.4 (Thu May 28 02:21:40 MST 2009)
 ;;
@@ -156,7 +160,7 @@
 ;;; Code:
 
 (require 'cl)
-(require 'eshell)   ;; For portable path handling
+(require 'eshell) ;; For portable path handling
 
 (defgroup eproject nil "eproject" :prefix "eproject-")
 
@@ -467,45 +471,6 @@ else through unchanged."
     (error (format "%s is not in a project of type %s!"
                    (current-buffer) type))))
 
-;; support for visiting other project files
-
-(defun eproject--completing-read (prompt choices)
-  "Use completing-read to do a completing read."
-  (completing-read prompt choices nil t))
-
-(require 'iswitchb) ;; If this causes problems, you can comment and do without
-(defun eproject--icompleting-read (prompt choices)
-  "Use iswitchb to do a completing read."
-  (let ((iswitchb-make-buflist-hook
-         (lambda ()
-           (setq iswitchb-temp-buflist choices))))
-    (when (not iswitchb-mode)
-      (add-hook 'minibuffer-setup-hook 'iswitchb-minibuffer-setup))
-    (prog1 (iswitchb-read-buffer prompt nil t)
-      (when (not iswitchb-mode)
-        (remove-hook 'minibuffer-setup-hook 'iswitchb-minibuffer-setup)))))
-
-(defun eproject--ido-completing-read (prompt choices)
-  "Use ido to do a completing read."
-  (ido-completing-read prompt choices nil t))
-
-(defcustom eproject-completing-read-function
-  #'eproject--icompleting-read
-  "The function used to ask the user select a single file from a
-list of files; used by `eproject-find-file'."
-  :group 'eproject
-  :type '(radio (function-item :doc "Use emacs' standard completing-read function."
-                               eproject--completing-read)
-                (function-item :doc "Use iswitchb's completing-read function."
-                               eproject--icompleting-read)
-                (function-item :doc "Use ido's completing-read function."
-                               eproject--ido-completing-read)
-                (function)))
-
-(defun eproject--icomplete-read-with-alist (prompt alist)
-  (let ((show (mapcar (lambda (x) (car x)) alist)))
-    (cdr (assoc (funcall eproject-completing-read-function prompt show) alist))))
-
 (defun* eproject-list-project-files
     (&optional (project-root (eproject-root))
                (project-type (eproject-type)))
@@ -518,83 +483,9 @@ list of files; used by `eproject-find-file'."
         (ignore (concat (regexp-opt completion-ignored-extensions t) "$")))
     (eproject--search-directory-tree project-root matcher ignore)))
 
-
-(defalias 'eproject-ifind-file 'eproject-find-file)  ;; ifind is deperecated
-(defun eproject-find-file ()
-  "Present the user with a list of files in the current project
-to select from, open file when selected."
-  (interactive)
-  (find-file (eproject--icomplete-read-with-alist
-              "Project file: "
-              (mapcar #'eproject--shorten-filename (eproject-list-project-files)))))
-
-;; ibuffer support
-(require 'ibuffer)  ;; obviously this could be made optional, but
-(require 'ibuf-ext) ;; ibuffer is core, so this should not be harmful
-
-(define-ibuffer-filter eproject-root
-    "Filter buffers that have the provided eproject root"
-  (:reader (read-directory-name "Project root: " (ignore-errors (eproject-root)))
-           :description "project root")
-  (with-current-buffer buf
-    (equal (file-name-as-directory (expand-file-name qualifier))
-           (ignore-errors (eproject-root)))))
-
-(define-ibuffer-filter eproject
-    "Filter buffers that have the provided eproject name"
-  (:reader (funcall eproject-completing-read-function
-                    "Project name: " eproject-project-names)
-           :description "project name")
-  (with-current-buffer buf
-    (equal qualifier
-           (ignore-errors (eproject-name)))))
-
-(defun* eproject-ibuffer (&optional (project-root (eproject-root)))
-  "Open an IBuffer window showing all buffers with the
-project root PROJECT-ROOT."
-  (interactive)
-  (ibuffer nil "*Project Buffers*"
-           (list (cons 'eproject-root project-root))))
-
-;; extra macros
-(defmacro* with-each-buffer-in-project
-    ((binding &optional (project-root (eproject-root)))
-     &body body)
-  "Given a project root PROJECT-ROOT, finds each buffer visiting a file in that project, and executes BODY with each buffer bound to BINDING (and made current).
-
-\(fn (BINDING &optional PROJECT-ROOT) &body BODY)"
-  (declare (indent 2))
-  `(loop for ,binding in (buffer-list)
-         do
-         (with-current-buffer ,binding
-           (let ((detected-root (ignore-errors (eproject-root))))
-             (when (and detected-root (equal ,project-root detected-root))
-               ,@body)))))
-
-;; bulk management utils
-
-(defun eproject-kill-project-buffers ()
-  "Kill every buffer in the current project, including the current buffer."
-  (interactive)
-  (with-each-buffer-in-project (buf)
-      (kill-buffer buf)))
-
-(defun eproject-open-all-project-files ()
-  "Open every file in the same project as the file visited by the current buffer."
-  (interactive)
-  (let ((total 0))
-    (message "Opening files...")
-    (save-window-excursion
-      (loop for file in (eproject-list-project-files)
-            do (progn (find-file file) (incf total))))
-    (message "Opened %d files" total)))
-
-
 ;; finish up
-
 (add-hook 'find-file-hook #'eproject-maybe-turn-on)
 (add-hook 'dired-mode-hook #'eproject-maybe-turn-on)
 
 (provide 'eproject)
-
 ;;; eproject.el ends here
