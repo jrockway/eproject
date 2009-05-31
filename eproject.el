@@ -501,11 +501,6 @@ else through unchanged."
                  (loop for dir in directories
                        nconc (eproject--search-directory-tree dir file-regexp
                                                               ignore-regexp)))))
-
-(defun eproject--shorten-filename (filename)
-  (string-match (format "^%s\\(.+\\)$" (regexp-quote (eproject-root))) filename)
-  (cons (match-string 1 filename) filename))
-
 (defun eproject-assert-type (type)
   "Assert that the current buffer is in a project of type TYPE."
   (when (not (memq type (eproject--linearized-isa (eproject-type) t)))

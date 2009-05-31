@@ -60,6 +60,11 @@
 
 ;; support for visiting other project files
 (defalias 'eproject-ifind-file 'eproject-find-file)  ;; ifind is deperecated
+
+(defun eproject--shorten-filename (filename)
+  (string-match (format "^%s\\(.+\\)$" (regexp-quote (eproject-root))) filename)
+  (cons (match-string 1 filename) filename))
+
 (defun eproject-find-file ()
   "Present the user with a list of files in the current project
 to select from, open file when selected."
