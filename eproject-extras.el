@@ -146,6 +146,9 @@ list of files; used by `eproject-find-file'."
     (equal qualifier
            (ignore-errors (eproject-name)))))
 
+(define-ibuffer-column eproject (:name "Project" :inline t)
+  (ignore-errors (eproject-name)))
+
 (defun eproject-ibuffer (prefix)
   "Open an IBuffer window showing all buffers in the current project, or named project if PREFIX arg is supplied."
   (interactive "p")
