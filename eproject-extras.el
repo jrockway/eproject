@@ -198,11 +198,10 @@ If PREFIX arg is supplied, prompt for a project.  Otherwise,
 assume the project of the current buffer."
   (interactive "p")
   (let ((total 0)
-        (eproject-root (eproject--handle-root-prefix-arg prefix))
-        (eproject-mode t))
+        (root (eproject--handle-root-prefix-arg prefix)))
     (message "Opening files...")
     (save-window-excursion
-      (loop for file in (eproject-list-project-files)
+      (loop for file in (eproject-list-project-files root)
             do (progn (find-file file) (incf total))))
     (message "Opened %d files" total)))
 
