@@ -265,9 +265,15 @@ become project attributes."
    (lambda (directory) ; note that directory always has the path separator on the end
      (file-exists-p (concat directory filename)))))
 
-(define-project-type generic () nil :relevant-files ("^[^.]") :config-file ".eproject")
+(define-project-type generic () nil
+  :relevant-files (".*")
+  :irrelevant-files ("^[.]" "^[#]")
+  :config-file ".eproject")
+
 (define-project-type generic-eproject (generic) (look-for ".eproject"))
-(define-project-type generic-git (generic) (look-for ".git"))
+
+(define-project-type generic-git (generic) (look-for ".git")
+  :irrelevant-files ("^[.]" "^[#]" ".git/"))
 
 (defun eproject--type-info (type)
   (or
@@ -483,6 +489,7 @@ else through unchanged."
   (loop for file in (directory-files (file-name-as-directory directory) t "^[^.]" t)
         when (and (not (file-directory-p file))
                   (not (string-match ignore-regexp file))
+                  (not (string-match ignore-regexp (file-name-nondirectory file)))
                   (string-match file-regexp file))
         collect file into files
         when (file-directory-p file)
@@ -503,16 +510,20 @@ else through unchanged."
     (error (format "%s is not in a project of type %s!"
                    (current-buffer) type))))
 
+(defun eproject--combine-regexps (regexp-list)
+  (format "\\(?:%s\\)"
+          (reduce (lambda (a b) (concat a "\\|" b))
+                  (mapcar (lambda (f) (format "\\(?:%s\\)" f)) regexp-list))))
+
 (defun* eproject-list-project-files
     (&optional (project-root (eproject-root))
                (project-type (eproject-type)))
   "Return a list of all project files of type PROJECT-TYPE in PROJECT-ROOT."
-  (let ((matcher
-         (format "\\(?:%s\\)"
-             (reduce (lambda (a b) (concat a "\\|" b))
-                 (mapcar (lambda (f) (format "\\(?:%s\\)" f))
-                     (eproject-get-project-metadatum project-type :relevant-files)))))
-        (ignore (concat (regexp-opt completion-ignored-extensions t) "$")))
+  (let ((matcher (eproject--combine-regexps
+                  (eproject-get-project-metadatum project-type :relevant-files)))
+        (ignore (eproject--combine-regexps (cons
+                 (concat (regexp-opt completion-ignored-extensions t) "$")
+                 (eproject-get-project-metadatum project-type :irrelevant-files)))))
     (eproject--search-directory-tree project-root matcher ignore)))
 
 ;; finish up
