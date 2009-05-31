@@ -117,12 +117,15 @@
 ;; - returns the project root for the project that buffer is a member
 ;;   of. defaults to the current buffer
 
-;; eproject-attribute (key &optional buffer)
+;; eproject-attribute (key &optional root)
 ;;
 ;; - returns the value of key for the project that buffer is a member
-;;   of.  buffer defaults to the current buffer.
+;;   of.  root defaults to the current buffer's eproject-root
+
+;; eproject-list-project-files
 
 ;; define-project-type
+
 ;; define-project-attribute
 
 ;; Everything else is mostly used internally, and may change.
@@ -359,11 +362,10 @@ BUFFER defaults to the current buffer"
 (defvar eproject-attributes-alist nil
   "An alist of project root -> plist of project metadata.")
 
-(defun* eproject-attribute (key &optional (buffer (current-buffer)))
-  "Lookup the attribute KEY for the eproject of BUFFER.
-BUFFER defaults to the current buffer."
-  (with-current-buffer buffer
-    (getf (cdr (assoc (eproject-root) eproject-attributes-alist)) key)))
+(defun* eproject-attribute (key &optional (root (eproject-root)))
+  "Lookup the attribute KEY for the eproject ROOT
+ROOT defaults to the current buffer's project-root."
+  (getf (cdr (assoc root eproject-attributes-alist)) key))
 
 (defun eproject--known-project-roots ()
   "Return a list of projects roots that have been visisted this session."
