@@ -512,16 +512,14 @@ else through unchanged."
           (reduce (lambda (a b) (concat a "\\|" b))
                   (mapcar (lambda (f) (format "\\(?:%s\\)" f)) regexp-list))))
 
-(defun* eproject-list-project-files
-    (&optional (project-root (eproject-root))
-               (project-type (eproject-type)))
-  "Return a list of all project files of type PROJECT-TYPE in PROJECT-ROOT."
+(defun* eproject-list-project-files (&optional (root (eproject-root)))
+  "Return a list of all project files in PROJECT-ROOT."
   (let ((matcher (eproject--combine-regexps
-                  (eproject-get-project-metadatum project-type :relevant-files)))
+                  (eproject-attribute :relevant-files root)))
         (ignore (eproject--combine-regexps (cons
                  (concat (regexp-opt completion-ignored-extensions t) "$")
-                 (eproject-get-project-metadatum project-type :irrelevant-files)))))
-    (eproject--search-directory-tree project-root matcher ignore)))
+                 (eproject-attribute :irrelevant-files root)))))
+    (eproject--search-directory-tree root matcher ignore)))
 
 ;; finish up
 (add-hook 'find-file-hook #'eproject-maybe-turn-on)
