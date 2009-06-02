@@ -130,6 +130,8 @@ list of files; used by `eproject-find-file'."
 
 (defun* eproject--get-name-root-alist (&key live-only)
   (let ((buffers (eproject--project-buffers)))
+    (when (null buffers)
+      (error "No projects yet"))
     (loop for (root . attrs) in
           (remove-if-not (lambda (attrs)
                            (or (not live-only)
