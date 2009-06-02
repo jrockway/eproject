@@ -115,6 +115,19 @@ list of files; used by `eproject-find-file'."
   (let ((show (mapcar (lambda (x) (car x)) alist)))
     (cdr (assoc (eproject--do-completing-read prompt show) alist))))
 
+(defun eproject--project-buffers ()
+  "Return an alist mapping each project root to its open buffers."
+  (let ((hash (make-hash-table :test 'equal)))
+    (loop for (root attrs) in eproject-attributes-alist
+          do (setf (gethash root hash) nil))
+    (loop for (root . buf) in
+          (delete-if #'not
+              (mapcar (lambda (b) (ignore-errors (cons (eproject-root b) b)))
+                      (buffer-list)))
+          do (push buf (gethash root hash nil)))
+    (loop for key being the hash-keys of hash
+          collect (cons key (gethash key hash)))))
+
 (defun eproject--get-name-root-alist ()
   (loop for (root . attrs) in eproject-attributes-alist
         collect (cons (getf attrs :name) root)))
@@ -172,16 +185,12 @@ list of files; used by `eproject-find-file'."
      &body body)
   "Given a project root PROJECT-ROOT, finds each buffer visiting a file in that project, and executes BODY with each buffer bound to BINDING (and made current)."
   (declare (indent 2))
-  (let* ((root-sym (gensym)))
-    `(progn
-       (let ((,root-sym ,project-root))
-         (when (not ,root-sym) (setq ,root-sym (eproject-root)))
-         (loop for ,binding in (buffer-list)
-               do
-               (with-current-buffer ,binding
-                 (let ((detected-root (ignore-errors (eproject-root))))
-                   (when (and detected-root (equal ,root-sym detected-root))
-                     ,@body))))))))
+  `(progn
+     (loop for ,binding in (cdr (assoc (or ,project-root (eproject-root))
+                                           (eproject--project-buffers)))
+           do
+           (with-current-buffer ,binding
+             ,@body))))
 
 ;; bulk management utils
 (defun eproject-kill-project-buffers (prefix)
