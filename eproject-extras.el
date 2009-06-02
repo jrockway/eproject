@@ -128,17 +128,22 @@ list of files; used by `eproject-find-file'."
     (loop for key being the hash-keys of hash
           collect (cons key (gethash key hash)))))
 
-(defun eproject--get-name-root-alist ()
-  (loop for (root . attrs) in eproject-attributes-alist
-        collect (cons (getf attrs :name) root)))
+(defun* eproject--get-name-root-alist (&key live-only)
+  (let ((buffers (eproject--project-buffers)))
+    (loop for (root . attrs) in
+          (remove-if-not (lambda (attrs)
+                           (or (not live-only)
+                               (cdr (assoc (car attrs) buffers))))
+                     eproject-attributes-alist)
+        collect (cons (getf attrs :name) root))))
 
-(defun eproject--read-project-name ()
+(defun* eproject--read-project-name (&key live-only)
   (eproject--icomplete-read-with-alist
-   "Project name: " (eproject--get-name-root-alist)))
+   "Project name: " (eproject--get-name-root-alist :live-only live-only)))
 
-(defun eproject--handle-root-prefix-arg (prefix)
+(defun* eproject--handle-root-prefix-arg (prefix &key live-only)
   (if (= prefix 4)
-      (eproject--read-project-name)
+      (eproject--read-project-name :live-only live-only)
     (eproject-root)))
 
 ;; ibuffer support
@@ -200,7 +205,7 @@ If PREFIX is specified, prompt for a project name and kill those
 buffers instead."
   (interactive "p")
   (with-each-buffer-in-project
-      (buf (eproject--handle-root-prefix-arg prefix))
+      (buf (eproject--handle-root-prefix-arg prefix :live-only t))
     (kill-buffer buf)))
 
 (defun eproject-open-all-project-files (prefix)
