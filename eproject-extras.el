@@ -226,6 +226,11 @@ assume the project of the current buffer."
 
 ;; project management
 
+(defun eproject-project-root (project)
+  "Given a PROJECT name, return the root directory."
+  (let ((projects (eproject--get-name-root-alist)))
+    (cdr (assoc project projects))))
+
 (defun eproject-revisit-project (prefix)
   "Given a project name, visit the root directory.
 
