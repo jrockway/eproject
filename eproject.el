@@ -24,8 +24,8 @@
 ;; License along with this program; if not, write to the Free
 ;; Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
 ;; MA 02111-1307, USA.
-
-;;; Commentary
+;;
+;;; Commentary:
 ;;
 ;; Eproject is an extension that lets you group related files together
 ;; as projects.  It aims to be as unobtrusive as possible -- no new
@@ -52,12 +52,14 @@
 ;; There are a few things you get with this.  A hook called
 ;; perl-project-file-visit-hook will be run, and the buffer will have
 ;; the "eproject-mode" minor-mode turned on.  You can also read and
-;; set metadata via the eproject-get-project-metadatum and
+;; set metadata via the eproject-attribute and
 ;; eproject-add-project-metadatum calls.
 ;;
-;; (Right now, you get a "C-c C-f" keybinding which will allow you
-;; to easily visit any of the "relevant files" in the project.  You
-;; can add your own bindings to the eproject-mode-map, of course.)
+;; (This is mostly helpful to lisp programmers rather than end-users;
+;; if you want tools for visiting and managing projects (and ibuffer
+;; integration), load `eproject-extras'.  These extras are great
+;; examples of the eproject API in action, so please take a look even
+;; if you don't want those exact features.)
 ;;
 ;; Let's look at the mechanics of the define-project-type call.  The
 ;; first argument is the name of the project type -- it can be any
@@ -197,7 +199,13 @@
 (require 'cl)
 (require 'eshell) ;; For portable path handling
 
-(defgroup eproject nil "eproject" :prefix "eproject-")
+(defgroup eproject nil
+  "Eproject; provide support for grouping files and buffers into projects"
+  :prefix "eproject-"
+  :group 'convenience
+  :link '(emacs-commentary-link :tag "Commentary" "eproject.el")
+  :link '(emacs-library-link :tag "Optional extras" "eproject-extras.el")
+  :link '(url-link :tag "Github wiki" "http://wiki.github.com/jrockway/eproject"))
 
 (defvar eproject-project-types nil
   "An alist of project type name to (supertypes selector metadata-plist) pairs.")
