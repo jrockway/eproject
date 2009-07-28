@@ -297,7 +297,7 @@ become project attributes."
 (defun eproject--project-selector (type)
   (nth 2 (eproject--type-info type)))
 
-(defun eproject--look-for-impl (file expression &optional type)
+(defun* eproject--look-for-impl (file expression &optional (type :filename))
   "Implements the LOOK-FOR function that is flet-bound during
 `eproject--run-project-selector'.  EXPRESSION and TYPE specify
 what to look for.  Some examples:
@@ -305,10 +305,9 @@ what to look for.  Some examples:
    (look-for \"Makefile.PL\") ; look up the directory tree for a file called Makefile.PL
    (look-for \"*.PL\" :glob) ; look for a file matching *.PL
 "
-  (when (not type) (setq type :filename))
   (case type
     (:filename (eproject--find-file-named file expression))
-    (:glob (eproject--scan-parents-for file
+    (:glob (eproject--scan-parents-for (file-name-directory file)
              (lambda (current-directory)
                (let ((default-directory current-directory))
                  (and (not (equal file current-directory))
@@ -321,7 +320,7 @@ what to look for.  Some examples:
     (cond ((eq major-mode 'dired-mode)
            (setq file (expand-file-name dired-directory)))
           (t (error "Buffer '%s' has no file name" (current-buffer)))))
-  (flet ((look-for (expr &optional expr-type)
+  (flet ((look-for (expr &optional (expr-type :filename))
                    (funcall #'eproject--look-for-impl file expr expr-type)))
     (funcall (eproject--project-selector type) file)))
 
