@@ -62,8 +62,13 @@
 (defalias 'eproject-ifind-file 'eproject-find-file)  ;; ifind is deperecated
 
 (defun eproject--shorten-filename (filename)
-  (string-match (format "^%s\\(.+\\)$" (regexp-quote (eproject-root))) filename)
-  (cons (match-string 1 filename) filename))
+  (if (string-match (format "^%s\\(.+\\)$" (regexp-quote (eproject-root))) filename)
+      (cons (funcall (eproject-attribute :file-name-map)
+                     (eproject-root)
+                     (match-string 1 filename))
+            filename)
+    (cons filename filename))) ;; should never happen, but who knows
+
 
 (defun eproject-find-file ()
   "Present the user with a list of files in the current project

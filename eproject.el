@@ -276,9 +276,11 @@ become project attributes."
    (lambda (directory) ; note that directory always has the path separator on the end
      (file-exists-p (concat directory filename)))))
 
+;; TODO: sugar around lambda/lambda, which is ugly
 (define-project-type generic () nil
   :relevant-files (".*")
   :irrelevant-files ("^[.]" "^[#]")
+  :file-name-map (lambda (root) (lambda (root file) file))
   :config-file ".eproject")
 
 (define-project-type generic-eproject (generic) (look-for ".eproject"))
