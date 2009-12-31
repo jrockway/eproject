@@ -486,15 +486,22 @@ else through unchanged."
 (defun eproject-maybe-turn-on ()
   "Turn on eproject for the current buffer, if it is in a project."
   (interactive)
-  (loop for type in (eproject--all-types)
-        do (let ((root (eproject--run-project-selector type)))
-             (when root
-               (setq eproject-root (file-name-as-directory root))
-               (eproject--init-attributes eproject-root type)
-               (eproject-mode 1)
-               (add-to-list 'eproject-project-names (eproject-name))
-               (run-hooks (intern (format "%s-project-file-visit-hook" type)))
-               (return root)))))
+  (let (bestroot besttype)
+    (loop for type in (eproject--all-types)
+          do (let ((root (eproject--run-project-selector type)))
+               (when (and root
+                          (or (not bestroot)
+                              ;; longest filename == best match (XXX: need to canonicalize?)
+                              (> (length root) (length bestroot))))
+                 (setq bestroot root)
+                 (setq besttype type))))
+    (when bestroot
+      (setq eproject-root (file-name-as-directory bestroot))
+      (eproject--init-attributes eproject-root besttype)
+      (eproject-mode 1)
+      (add-to-list 'eproject-project-names (eproject-name))
+      (run-hooks (intern (format "%s-project-file-visit-hook" besttype)))
+      bestroot)))
 
 (defun eproject--search-directory-tree (directory file-regexp ignore-regexp)
   (loop for file in (directory-files (file-name-as-directory directory) t "^[^.]" t)
