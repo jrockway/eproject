@@ -247,5 +247,15 @@ If PREFIX arg is supplied, run `eproject-find-file'."
           (eproject-find-file)
       (find-file eproject-root))))
 
+;; grep project files (contributed by Julian Snitow)
+
+(defun eproject-grep (regexp)
+  "Search all files in the current project for REGEXP."
+  (interactive "sRegexp grep: ")
+  (let* ((root (eproject-root))
+         (default-directory root)
+         (files (eproject-list-project-files-relative root)))
+    (lgrep regexp (combine-and-quote-strings files) root)))
+
 (provide 'eproject-extras)
 ;;; eproject-extras.el ends here
