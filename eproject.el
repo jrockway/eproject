@@ -537,6 +537,11 @@ else through unchanged."
                  (eproject-attribute :irrelevant-files root)))))
     (eproject--search-directory-tree root matcher ignore)))
 
+(defun* eproject-list-project-files-relative (&optional (root (eproject-root)))
+  (mapcar (lambda (file)
+            (file-relative-name file root))
+          (eproject-list-project-files root)))
+
 ;; finish up
 (add-hook 'find-file-hook #'eproject-maybe-turn-on)
 (add-hook 'dired-mode-hook #'eproject-maybe-turn-on)
