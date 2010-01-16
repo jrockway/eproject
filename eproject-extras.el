@@ -257,5 +257,19 @@ If PREFIX arg is supplied, run `eproject-find-file'."
          (files (eproject-list-project-files-relative root)))
     (lgrep regexp (combine-and-quote-strings files) root)))
 
+(defcustom eproject-todo-expressions
+  '("TODO" "XXX" "FIXME")
+  "A list of tags for eproject-todo to search for when generating the project's TODO list."
+  :group 'eproject
+  :type 'list)
+
+(defun eproject-todo ()
+  "Display a project TODO list.
+
+Customize `eproject-todo-expressions' to control what this function looks for."
+  (interactive)
+  ;; TODO: display output in a buffer called *<project>-TODO* instead of *grep*.
+  (eproject-grep (regexp-opt eproject-todo-expressions)))
+
 (provide 'eproject-extras)
 ;;; eproject-extras.el ends here
