@@ -255,6 +255,7 @@ If PREFIX arg is supplied, run `eproject-find-file'."
   (let* ((root (eproject-root))
          (default-directory root)
          (files (eproject-list-project-files-relative root)))
+    (grep-compute-defaults)
     (lgrep regexp (combine-and-quote-strings files) root)))
 
 (defcustom eproject-todo-expressions
