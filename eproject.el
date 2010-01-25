@@ -317,12 +317,14 @@ what to look for.  Some examples:
                       (> (length (file-expand-wildcards expression)) 0))))))
     (otherwise (error "Don't know how to handle %s in LOOK-FOR!" type))))
 
-(defun* eproject--run-project-selector (type &optional (file (buffer-file-name)))
+(defun eproject--buffer-file-name ()
+  (or (buffer-file-name) (and (eq major-mode 'dired-mode)
+                              (expand-file-name dired-directory))))
+
+(defun* eproject--run-project-selector (type &optional (file (eproject--buffer-file-name)))
   "Run the selector associated with project type TYPE."
   (when (not file)
-    (cond ((eq major-mode 'dired-mode)
-           (setq file (expand-file-name dired-directory)))
-          (t (error "Buffer '%s' has no file name" (current-buffer)))))
+    (error "Buffer '%s' has no file name" (current-buffer)))
   (flet ((look-for (expr &optional (expr-type :filename))
                    (funcall #'eproject--look-for-impl file expr expr-type)))
     (funcall (eproject--project-selector type) file)))
@@ -525,7 +527,7 @@ else through unchanged."
           (eproject--setup-local-variables)
         (error (display-warning 'warning
           (format "Problem initializing project-specific local-variables in %s: %s"
-                  (buffer-file-name) e))))
+                  (eproject--buffer-file-name) e))))
 
       ;; run project-type hooks, which may also call into eproject-*
       ;; functions
@@ -538,7 +540,10 @@ else through unchanged."
   "Setup local variables as specified by the project attribute :local-variables."
   (let* ((var-maker (eproject-attribute :local-variables))
          (vars (cond ((functionp var-maker)
-                      (funcall var-maker (eproject-root) (file-relative-name (buffer-file-name) (eproject-root))))
+                      (funcall var-maker
+                               (eproject-root)
+                               (file-relative-name (eproject--buffer-file-name)
+                                                   (eproject-root))))
                      ((listp var-maker) var-maker))))
     (loop for (name val) on vars by #'cddr do
           (set (make-local-variable name) val))))
