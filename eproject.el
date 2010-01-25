@@ -281,6 +281,7 @@ become project attributes."
   :relevant-files (".*")
   :irrelevant-files ("^[.]" "^[#]")
   :file-name-map (lambda (root) (lambda (root file) file))
+  :local-variables (lambda (root) (lambda (root file) nil))
   :config-file ".eproject")
 
 (define-project-type generic-eproject (generic) (look-for ".eproject"))
@@ -498,17 +499,49 @@ else through unchanged."
           do (let ((root (eproject--run-project-selector type)))
                (when (and root
                           (or (not bestroot)
-                              ;; longest filename == best match (XXX: need to canonicalize?)
+                              ;; longest filename == best match (XXX:
+                              ;; need to canonicalize?)
                               (> (length root) (length bestroot))))
                  (setq bestroot root)
                  (setq besttype type))))
     (when bestroot
       (setq eproject-root (file-name-as-directory bestroot))
-      (eproject--init-attributes eproject-root besttype)
+
+      ;; read .eproject file (etc.) and initialize at least :name and
+      ;; :type
+      (condition-case e
+          (eproject--init-attributes eproject-root besttype)
+        (error (display-warning 'warning
+            (format "There was a problem setting up the eproject attributes for this project: %s" e))))
+
+      ;; with :name and :type set, it's now safe to turn on eproject
       (eproject-mode 1)
       (add-to-list 'eproject-project-names (eproject-name))
+
+      ;; initialize buffer-local variables that the project defines
+      ;; (called after we turn on eproject-mode, so we can call
+      ;; eproject-* functions cleanly)
+      (condition-case e
+          (eproject--setup-local-variables)
+        (error (display-warning 'warning
+          (format "Problem initializing project-specific local-variables in %s: %s"
+                  (buffer-file-name) e))))
+
+      ;; run project-type hooks, which may also call into eproject-*
+      ;; functions
       (run-hooks (intern (format "%s-project-file-visit-hook" besttype)))
+
+      ;; return the project root; it's occasionally useful for the caller
       bestroot)))
+
+(defun eproject--setup-local-variables ()
+  "Setup local variables as specified by the project attribute :local-variables."
+  (let* ((var-maker (eproject-attribute :local-variables))
+         (vars (cond ((functionp var-maker)
+                      (funcall var-maker (eproject-root) (file-relative-name (buffer-file-name) (eproject-root))))
+                     ((listp var-maker) var-maker))))
+    (loop for (name val) on vars by #'cddr do
+          (set (make-local-variable name) val))))
 
 (defun eproject--search-directory-tree (directory file-regexp ignore-regexp)
   (loop for file in (directory-files (file-name-as-directory directory) t "^[^.]" t)
