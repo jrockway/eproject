@@ -62,13 +62,13 @@
 (defalias 'eproject-ifind-file 'eproject-find-file)  ;; ifind is deperecated
 
 (defun eproject--shorten-filename (filename)
-  (if (string-match (format "^%s\\(.+\\)$" (regexp-quote (eproject-root))) filename)
-      (cons (funcall (eproject-attribute :file-name-map)
-                     (eproject-root)
-                     (match-string 1 filename))
-            filename)
-    (cons filename filename))) ;; should never happen, but who knows
+  "Use the function provided by the `:file-name-map' project attribute to shorten FILENAME in the context of the current project.
 
+The default implementation just makes the filename relative to the project root."
+  (cons (funcall (eproject-attribute :file-name-map)
+                 (eproject-root)
+                 (file-relative-name filename (eproject-root)))
+        filename))
 
 (defun eproject-find-file ()
   "Present the user with a list of files in the current project
