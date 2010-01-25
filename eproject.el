@@ -459,8 +459,15 @@ else through unchanged."
                      (nconc config-file-data class-data))
                     (t class-data)))
 
-             ;; calculate the project name, as it's used by "user data"
+             ;; calculate the project name, as it's used by "user
+             ;; data"
+
+             ;; backcompat note: not sure why i looked in
+             ;; :project-name for the value to set the :name attribute
+             ;; to.  so now we look in both, preferring the backwards
+             ;; compatible version.
              (name (or (getf class-and-config-data :project-name)
+                       (getf class-and-config-data :name)
                        (directory-file-name
                         (elt (reverse (eshell-split-path root)) 0))))
 
