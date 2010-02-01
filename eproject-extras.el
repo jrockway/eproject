@@ -249,6 +249,7 @@ If PREFIX arg is supplied, run `eproject-find-file'."
 
 ;; grep project files (contributed by Julian Snitow)
 
+;; TODO: make the grep command customizeable; to use "Ack", for example
 (defun eproject-grep (regexp)
   "Search all files in the current project for REGEXP."
   (interactive "sRegexp grep: ")
