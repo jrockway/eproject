@@ -298,7 +298,9 @@ With the prefix arg LOOK-IN-INVISIBLE-BUFFERS looks in buffers that are not curr
            (with-current-buffer eshell-buffer
              (goto-char (point-max))
              (eshell/cd root)
-             (eshell-send-input nil t))))))
+             (eshell-send-input nil t)
+             eshell-buffer))))) ;; returns eshell-buf so you can focus
+                                ;; the window if you want
 
 (provide 'eproject-extras)
 ;;; eproject-extras.el ends here
