@@ -272,5 +272,32 @@ Customize `eproject-todo-expressions' to control what this function looks for."
   ;; TODO: display output in a buffer called *<project>-TODO* instead of *grep*.
   (eproject-grep (regexp-opt eproject-todo-expressions)))
 
+(defun eproject-eshell-cd-here (&optional look-in-invisible-buffers)
+  "If there is an EShell buffer, cd to the project root in that buffer.
+
+With the prefix arg LOOK-IN-INVISIBLE-BUFFERS looks in buffers that are not currently displayed."
+  (interactive "p")
+  (message "%s" look-in-invisible-buffers)
+  (setq look-in-invisible-buffers (cond ((= look-in-invisible-buffers 4) t)))
+  (message "%s" look-in-invisible-buffers)
+  (let* ((root (eproject-root))
+         (eshell-p (lambda (buf)
+                     (with-current-buffer buf (eq major-mode 'eshell-mode))))
+         (eshell-buffer (find-if eshell-p
+                                 (if look-in-invisible-buffers
+                                     (buffer-list)
+                                   (mapcar (lambda (w) (window-buffer w))
+                                           (window-list))))))
+
+    (cond ((and (not eshell-buffer) look-in-invisible-buffers)
+           (error "No EShell buffer!"))
+          ((and (not eshell-buffer) (not look-in-invisible-buffers))
+           (error "No visible EShell buffer; try re-running with the prefix arg"))
+          (eshell-buffer
+           (with-current-buffer eshell-buffer
+             (goto-char (point-max))
+             (eshell/cd root)
+             (eshell-send-input nil t))))))
+
 (provide 'eproject-extras)
 ;;; eproject-extras.el ends here
