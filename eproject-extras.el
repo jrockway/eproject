@@ -302,5 +302,11 @@ With the prefix arg LOOK-IN-INVISIBLE-BUFFERS looks in buffers that are not curr
              eshell-buffer))))) ;; returns eshell-buf so you can focus
                                 ;; the window if you want
 
+(defun eproject-compile ()
+  "Run `compile-command' in the project root."
+  (interactive)
+  (let ((default-directory (eproject-root)))
+    (call-interactively #'compile)))
+
 (provide 'eproject-extras)
 ;;; eproject-extras.el ends here
