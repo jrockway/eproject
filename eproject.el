@@ -319,7 +319,9 @@ what to look for.  Some examples:
 
 (defun eproject--buffer-file-name ()
   (or (buffer-file-name) (and (eq major-mode 'dired-mode)
-                              (expand-file-name dired-directory))))
+                              (expand-file-name (if (consp dired-directory)
+                                                    (car dired-directory)
+                                                  dired-directory)))))
 
 (defun* eproject--run-project-selector (type &optional (file (eproject--buffer-file-name)))
   "Run the selector associated with project type TYPE."
