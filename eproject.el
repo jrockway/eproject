@@ -589,9 +589,14 @@ else through unchanged."
             (file-relative-name file root))
           (eproject-list-project-files root)))
 
-;; finish up
+(define-derived-mode dot-eproject-mode emacs-lisp-mode "dot-eproject"
+  "Major mode for editing .eproject files."
+  (define-key dot-eproject-mode-map (kbd "C-c C-c") #'eproject-reinitialize-project))
+
+;; Finish up
 (add-hook 'find-file-hook #'eproject-maybe-turn-on)
 (add-hook 'dired-mode-hook #'eproject-maybe-turn-on)
+(add-to-list 'auto-mode-alist '("\\.eproject$" . dot-eproject-mode))
 
 (provide 'eproject)
 ;;; eproject.el ends here
