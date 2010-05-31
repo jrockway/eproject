@@ -24,32 +24,6 @@
 ;; bloated, and not strictly necessary.  So now it lives here, leaving
 ;; the eproject core pristine and minimal.
 
-;;; User-visible commands:
-
-;; eproject-find-file
-;;
-;; - easily visit another file in the current project
-
-;; eproject-ibuffer
-;;
-;; - open an ibuffer with current project buffers (or other project if
-;;   invoked with prefix arg)
-
-;; eproject-kill-project-buffers
-;;
-;; - kill all of the current project's buffers (or other project if
-;;   prefixed)
-
-;; eproject-open-all-project-files
-;;
-;; - open all files in the current project (or other project if
-;;   prefixed)
-
-;; eproject-revisit-project
-;;
-;; - open the named project root, or a project file if prefixed
-
-
 ;;; Code:
 
 (require 'eproject)
