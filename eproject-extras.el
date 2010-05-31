@@ -247,6 +247,15 @@ Customize `eproject-todo-expressions' to control what this function looks for."
   ;; TODO: display output in a buffer called *<project>-TODO* instead of *grep*.
   (eproject-grep (regexp-opt eproject-todo-expressions)))
 
+(defun eproject-multi-isearch-buffers ()
+  "Do a `multi-isearch' on opened buffers in the current project.
+
+Run `eproject-open-all-project-files' first or just
+`eproject-grep' if you want to search all project files."
+  (interactive)
+  (multi-isearch-buffers
+   (cdr (assoc (eproject-root) (eproject--project-buffers)))))
+
 (defun eproject-eshell-cd-here (&optional look-in-invisible-buffers)
   "If there is an EShell buffer, cd to the project root in that buffer.
 
