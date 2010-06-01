@@ -261,9 +261,7 @@ Run `eproject-open-all-project-files' first or just
 
 With the prefix arg LOOK-IN-INVISIBLE-BUFFERS looks in buffers that are not currently displayed."
   (interactive "p")
-  (message "%s" look-in-invisible-buffers)
   (setq look-in-invisible-buffers (cond ((= look-in-invisible-buffers 4) t)))
-  (message "%s" look-in-invisible-buffers)
   (let* ((root (eproject-root))
          (eshell-p (lambda (buf)
                      (with-current-buffer buf (eq major-mode 'eshell-mode))))
