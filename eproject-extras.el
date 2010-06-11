@@ -36,16 +36,18 @@
 (defalias 'eproject-ifind-file 'eproject-find-file)  ;; ifind is deperecated
 
 (defun eproject--shorten-filename (filename)
-  "Use the function provided by the `:file-name-map' project attribute to shorten FILENAME in the context of the current project.
+  "Shorten FILENAME in the context of the current project.
+Uses the function provided by the `:file-name-map' project attribute.
 
-The default implementation just makes the filename relative to the project root."
+The default implementation just makes the filename relative to
+the project root."
   (cons (funcall (eproject-attribute :file-name-map)
                  (eproject-root)
                  (file-relative-name filename (eproject-root)))
         filename))
 
 (defun eproject-find-file ()
-  "Present the user with a list of files in the current project
+  "Present the user with a list of files in the current project.
 to select from, open file when selected."
   (interactive)
   (find-file (eproject--icomplete-read-with-alist
@@ -75,8 +77,8 @@ to select from, open file when selected."
 
 (defcustom eproject-completing-read-function
   #'eproject--icompleting-read
-  "The function used to ask the user select a single file from a
-list of files; used by `eproject-find-file'."
+  "Ask the user select a single file from a list of files.
+Used by `eproject-find-file'."
   :group 'eproject
   :type '(radio (function-item :doc "Use emacs' standard completing-read function."
                                eproject--completing-read)
