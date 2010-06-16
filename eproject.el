@@ -596,6 +596,12 @@ else through unchanged."
 ;; Finish up
 (add-hook 'find-file-hook #'eproject-maybe-turn-on)
 (add-hook 'dired-mode-hook #'eproject-maybe-turn-on)
+(add-hook 'after-change-major-mode-hook
+          (lambda ()
+            (when (and (buffer-file-name)
+                       (not eproject-root))
+              (eproject-maybe-turn-on))))
+
 (add-to-list 'auto-mode-alist '("\\.eproject$" . dot-eproject-mode))
 
 (provide 'eproject)
