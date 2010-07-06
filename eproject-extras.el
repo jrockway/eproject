@@ -46,6 +46,7 @@ the project root."
                  (file-relative-name filename (eproject-root)))
         filename))
 
+;;;###autoload
 (defun eproject-find-file ()
   "Present the user with a list of files in the current project.
 to select from, open file when selected."
@@ -150,6 +151,7 @@ Used by `eproject-find-file'."
 (define-ibuffer-column eproject (:name "Project" :inline t)
   (ignore-errors (eproject-name)))
 
+;;;###autoload
 (defun eproject-ibuffer (prefix)
   "Open an IBuffer window showing all buffers in the current project, or named project if PREFIX arg is supplied."
   (interactive "p")
@@ -181,6 +183,7 @@ Used by `eproject-find-file'."
              ,@body))))
 
 ;; bulk management utils
+;;;###autoload
 (defun eproject-kill-project-buffers (prefix)
   "Kill every buffer in the current project, including the current buffer.
 
@@ -212,6 +215,7 @@ assume the project of the current buffer."
   (let ((projects (eproject--get-name-root-alist)))
     (cdr (assoc project projects))))
 
+;;;###autoload
 (defun eproject-revisit-project (prefix)
   "Given a project name, visit the root directory.
 
@@ -226,6 +230,7 @@ If PREFIX arg is supplied, run `eproject-find-file'."
 ;; grep project files (contributed by Julian Snitow)
 
 ;; TODO: make the grep command customizeable; to use "Ack", for example
+;;;###autoload
 (defun eproject-grep (regexp)
   "Search all files in the current project for REGEXP."
   (interactive "sRegexp grep: ")
@@ -241,6 +246,7 @@ If PREFIX arg is supplied, run `eproject-find-file'."
   :group 'eproject
   :type 'list)
 
+;;;###autoload
 (defun eproject-todo ()
   "Display a project TODO list.
 
@@ -249,6 +255,7 @@ Customize `eproject-todo-expressions' to control what this function looks for."
   ;; TODO: display output in a buffer called *<project>-TODO* instead of *grep*.
   (eproject-grep (regexp-opt eproject-todo-expressions)))
 
+;;;###autoload
 (defun eproject-multi-isearch-buffers ()
   "Do a `multi-isearch' on opened buffers in the current project.
 
@@ -258,6 +265,7 @@ Run `eproject-open-all-project-files' first or just
   (multi-isearch-buffers
    (cdr (assoc (eproject-root) (eproject--project-buffers)))))
 
+;;;###autoload
 (defun eproject-eshell-cd-here (&optional look-in-invisible-buffers)
   "If there is an EShell buffer, cd to the project root in that buffer.
 
@@ -285,6 +293,7 @@ With the prefix arg LOOK-IN-INVISIBLE-BUFFERS looks in buffers that are not curr
              eshell-buffer))))) ;; returns eshell-buf so you can focus
                                 ;; the window if you want
 
+;;;###autoload
 (defun eproject-compile ()
   "Run `compile-command' in the project root."
   (interactive)
