@@ -244,7 +244,7 @@ If PREFIX arg is supplied, run `eproject-find-file'."
   '("TODO" "XXX" "FIXME")
   "A list of tags for eproject-todo to search for when generating the project's TODO list."
   :group 'eproject
-  :type 'list)
+  :type '(repeat string))
 
 ;;;###autoload
 (defun eproject-todo ()
