@@ -145,6 +145,9 @@
 ;;
 ;; - re-read config for the current project, then run
 ;;   eproject-maybe-turn-on
+;;
+;;   this is bound to C-c C-c when editing .eproject files, which is
+;;   very convenient for testing.
 
 ;; See eproject-extras.el for more interesting / useful commands.
 ;; This file is mostly "plumbing".
@@ -168,7 +171,16 @@
 ;; http://wiki.github.com/jrockway/eproject
 ;;
 
-;;; Changelog:
+;;; The Changelog section documents major changes.  Minor non-breaking
+;;; updates are regularly committed to git.
+
+;;;  Changelog:
+;;
+;; 1.6 (Sat Aug 28 22:21:39 CDT 2010)
+;;
+;; * Remove eproject-project-names variable and add some proper
+;;   introspection for project sets.
+;;
 ;; 1.5 (Thu May 28 21:38:08 MST 2009)
 ;;
 ;; * Split out the non-core stuff into eproject-extras.el.
@@ -586,6 +598,8 @@ else through unchanged."
                    (current-buffer) type))))
 
 (defun eproject--combine-regexps (regexp-list)
+  "Combine regexps like `regexp-opt', but without quoting anything.
+Argument REGEXP-LIST is a list of regexps to combine."
   (format "\\(?:%s\\)"
           (reduce (lambda (a b) (concat a "\\|" b))
                   (mapcar (lambda (f) (format "\\(?:%s\\)" f)) regexp-list))))

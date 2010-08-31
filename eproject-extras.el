@@ -230,7 +230,7 @@ If PREFIX arg is supplied, run `eproject-find-file'."
 
 ;; grep project files (contributed by Julian Snitow)
 
-;; TODO: make the grep command customizeable; to use "Ack", for example
+;; TODO: make the grep command customizable; to use "Ack", for example
 ;;;###autoload
 (defun eproject-grep (regexp)
   "Search all files in the current project for REGEXP."
@@ -243,7 +243,7 @@ If PREFIX arg is supplied, run `eproject-find-file'."
 
 (defcustom eproject-todo-expressions
   '("TODO" "XXX" "FIXME")
-  "A list of tags for eproject-todo to search for when generating the project's TODO list."
+  "A list of tags for `eproject-todo' to search for when generating the project's TODO list."
   :group 'eproject
   :type '(repeat string))
 
