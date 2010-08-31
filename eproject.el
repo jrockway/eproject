@@ -469,10 +469,9 @@ else through unchanged."
 
              ;; backcompat note: not sure why i looked in
              ;; :project-name for the value to set the :name attribute
-             ;; to.  so now we look in both, preferring the backwards
-             ;; compatible version.
-             (name (or (getf class-and-config-data :project-name)
-                       (getf class-and-config-data :name)
+             ;; to.  so now we look in both, preferring the new way.
+             (name (or (getf class-and-config-data :name)
+                       (getf class-and-config-data :project-name)
                        (directory-file-name
                         (elt (reverse (eshell-split-path root)) 0))))
 
