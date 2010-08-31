@@ -594,13 +594,14 @@ else through unchanged."
   (define-key dot-eproject-mode-map (kbd "C-c C-c") #'eproject-reinitialize-project))
 
 ;; Finish up
+(defun eproject--after-change-major-mode-hook ()
+  (when (and (buffer-file-name)
+             (not eproject-root))
+    (eproject-maybe-turn-on)))
+
 (add-hook 'find-file-hook #'eproject-maybe-turn-on)
 (add-hook 'dired-mode-hook #'eproject-maybe-turn-on)
-(add-hook 'after-change-major-mode-hook
-          (lambda ()
-            (when (and (buffer-file-name)
-                       (not eproject-root))
-              (eproject-maybe-turn-on))))
+(add-hook 'after-change-major-mode-hook #'eproject--after-change-major-mode-hook)
 
 (add-to-list 'auto-mode-alist '("\\.eproject$" . dot-eproject-mode))
 
