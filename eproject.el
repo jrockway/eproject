@@ -486,11 +486,12 @@ else through unchanged."
         (add-to-list 'eproject-attributes-alist
                      (cons root (nconc (list :type type :name name) data)))))))
 
+(defvar eproject-mode-map (make-sparse-keymap)
+  "Keybindings while in eproject-mode")
+
 (define-minor-mode eproject-mode
   "A minor mode for buffers that are a member of an eproject project."
-  nil " Project"
-  '(("" . eproject-find-file)
-    ("" . eproject-ibuffer))
+  nil " Project" eproject-mode-map
   (when (null eproject-root)
     (error "Please do not use this directly.  Call eproject-maybe-turn-on instead.")))
 
