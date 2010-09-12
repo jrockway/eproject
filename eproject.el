@@ -207,6 +207,15 @@
   :link '(emacs-library-link :tag "Optional extras" "eproject-extras.el")
   :link '(url-link :tag "Github wiki" "http://wiki.github.com/jrockway/eproject"))
 
+(defvar eproject-root nil
+  "A buffer-local variable set to the root of its eproject
+  project.  NIL if it isn't in an eproject.  Your code should
+  call the function `eproject-root` instead of accessing this
+  variable directly.  It should also not set it; only
+  `eproject-maybe-turn-on' can do that.")
+
+(make-variable-buffer-local 'eproject-root)
+
 (defvar eproject-project-types nil
   "An alist of project type name to (supertypes selector metadata-plist) pairs.")
 
@@ -229,6 +238,9 @@ accordingly.  If KEY matches a project root, its ATTRIBUTES are
 applied.
 
 ATTRIBUTES is a plist of attributes.")
+
+(defvar eproject-attributes-alist nil
+  "An alist of project root -> plist of project metadata.")
 
 (defun define-project-attribute (key attributes)
   "Define extra attributes to be applied to projects.
@@ -357,11 +369,6 @@ what to look for.  Some examples:
 (defun eproject-add-project-metadatum (type key value)
   (setf (getf (nth 3 (assoc type eproject-project-types)) key) value))
 
-(defvar eproject-root nil
-  "A buffer-local variable set to the root of its eproject project.  NIL if it isn't in an eproject.")
-
-(make-variable-buffer-local 'eproject-root)
-
 (defmacro* eproject--do-in-buffer ((buffer) &body forms)
   `(with-current-buffer ,buffer
      (when (not eproject-mode)
@@ -372,9 +379,6 @@ what to look for.  Some examples:
   "Return the value of the eproject variable root.
 BUFFER defaults to the current buffer"
   (eproject--do-in-buffer (buffer) eproject-root))
-
-(defvar eproject-attributes-alist nil
-  "An alist of project root -> plist of project metadata.")
 
 (defun* eproject-attribute (key &optional (root (eproject-root)))
   "Lookup the attribute KEY for the eproject ROOT
