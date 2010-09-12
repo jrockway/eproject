@@ -130,6 +130,8 @@
 
 ;; define-project-attribute
 
+;; eproject-projects
+
 ;; Everything else is mostly used internally, and may change.
 
 ;;; Public commands:
@@ -219,9 +221,6 @@
 (defvar eproject-project-types nil
   "An alist of project type name to (supertypes selector metadata-plist) pairs.")
 
-(defvar eproject-project-names nil
-  "A list of project names known to Emacs.  Populated as projects are opened, but may be prepopulated via .emacs if desired.")
-
 (defvar eproject-extra-attributes nil
   "A list of pairs used to assign attributes to projects.
 
@@ -246,6 +245,9 @@ ATTRIBUTES is a plist of attributes.")
   "Hook to run when the first buffer in a new project is opened.
   Called after the project is initialized, so it's safe to call
   eproject functions.")
+
+(defvar eproject-projects-hook nil
+  "Hook that's run when a list of projects is requested.  Hook may return a list of new (name . root) pairs to be added to eproject's internal list.")
 
 (defun define-project-attribute (key attributes)
   "Define extra attributes to be applied to projects.
@@ -529,7 +531,6 @@ else through unchanged."
 
       ;; with :name and :type set, it's now safe to turn on eproject
       (eproject-mode 1)
-      (add-to-list 'eproject-project-names (eproject-name))
 
       ;; initialize buffer-local variables that the project defines
       ;; (called after we turn on eproject-mode, so we can call
@@ -606,6 +607,24 @@ else through unchanged."
 (define-derived-mode dot-eproject-mode emacs-lisp-mode "dot-eproject"
   "Major mode for editing .eproject files."
   (define-key dot-eproject-mode-map (kbd "C-c C-c") #'eproject-reinitialize-project))
+
+;; introspect sets of projects
+(defun eproject-projects ()
+  "Return a list of (name . root) pairs of all known eproject projects."
+  (let ((hash (make-hash-table :test 'equal)))
+    (loop for f in eproject-projects-hook do
+          (loop for (name . root) in (funcall f)
+                do (puthash name root hash)))
+    (loop for (root . rest)
+          in eproject-attributes-alist
+          do (puthash (or (getf rest :name) (getf rest :project-name))
+                      root hash))
+    (loop for name being each hash-key in hash
+          collect (cons name (gethash name hash)))))
+
+(defun eproject-project-names ()
+  "Return a list of project names known to eproject."
+  (mapcar #'car (eproject-projects)))
 
 ;; Finish up
 (defun eproject--after-change-major-mode-hook ()
