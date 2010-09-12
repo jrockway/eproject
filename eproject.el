@@ -242,6 +242,11 @@ ATTRIBUTES is a plist of attributes.")
 (defvar eproject-attributes-alist nil
   "An alist of project root -> plist of project metadata.")
 
+(defvar eproject-first-buffer-hook nil
+  "Hook to run when the first buffer in a new project is opened.
+  Called after the project is initialized, so it's safe to call
+  eproject functions.")
+
 (defun define-project-attribute (key attributes)
   "Define extra attributes to be applied to projects.
 
@@ -502,7 +507,7 @@ else through unchanged."
 (defun eproject-maybe-turn-on ()
   "Turn on eproject for the current buffer, if it is in a project."
   (interactive)
-  (let (bestroot besttype)
+  (let (bestroot besttype (set-before (mapcar #'car eproject-attributes-alist)))
     (loop for type in (eproject--all-types)
           do (let ((root (eproject--run-project-selector type)))
                (when (and root
@@ -534,6 +539,11 @@ else through unchanged."
         (error (display-warning 'warning
           (format "Problem initializing project-specific local-variables in %s: %s"
                   (eproject--buffer-file-name) e))))
+
+      ;; run the first-buffer hooks if this is the first time we've
+      ;; seen this particular project root.
+      (when (not (member eproject-root set-before))
+        (run-hooks 'eproject-first-buffer-hook))
 
       ;; run project-type hooks, which may also call into eproject-*
       ;; functions
