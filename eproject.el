@@ -434,6 +434,12 @@ ROOT defaults to the current buffer's project-root."
       (message "Project `%s' reinitialized successfully." (eproject-name))
     (message "Error reinitializing project!")))
 
+(defun eproject--maybe-reinitialize ()
+  "Run by `eproject-project-change-hook' to reinit the project after .eproject is modified."
+  (when (and (eq major-mode 'dot-eproject-mode)
+             (boundp 'eproject-root) eproject-root)
+    (eproject-reinitialize-project)))
+
 (defun eproject--eval-user-data (project-name root)
   "Interpret EPROJECT-EXTRA-ATTRIBUTES for PROJECT-NAME (in ROOT)."
   (loop for (key attributes) in eproject-extra-attributes append
@@ -664,6 +670,8 @@ Argument REGEXP-LIST is a list of regexps to combine."
 (add-hook 'dired-mode-hook #'eproject-maybe-turn-on)
 (add-hook 'after-change-major-mode-hook #'eproject--after-change-major-mode-hook)
 (add-hook 'after-save-hook #'eproject--after-save-hook)
+
+(add-hook 'eproject-project-change-hook #'eproject--maybe-reinitialize)
 
 (add-to-list 'auto-mode-alist '("\\.eproject$" . dot-eproject-mode))
 
