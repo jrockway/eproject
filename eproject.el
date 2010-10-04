@@ -261,6 +261,9 @@ ATTRIBUTES is a plist of attributes.")
 (defvar eproject-projects-hook nil
   "Hook that's run when a list of projects is requested.  Hook may return a list of new (name . root) pairs to be added to eproject's internal list.")
 
+(defvar eproject-project-change-hook nil
+  "Hook that's run when a project is changed; currently this means when a file in the project is saved.")
+
 (defun define-project-attribute (key attributes)
   "Define extra attributes to be applied to projects.
 
@@ -646,9 +649,18 @@ Argument REGEXP-LIST is a list of regexps to combine."
              (not eproject-root))
     (eproject-maybe-turn-on)))
 
+(defun eproject--after-save-hook ()
+  ;; TODO: perhaps check against relevant-files or irrelevant-files
+  ;; regex?  I'm avoiding this now because I'd rather not force the
+  ;; speed hit -- if the user wants to do something slow after save,
+  ;; fine... but I'd rather not make the decision for him.
+  (when (and (boundp 'eproject-root) eproject-root)
+    (run-hooks 'eproject-project-change-hook)))
+
 (add-hook 'find-file-hook #'eproject-maybe-turn-on)
 (add-hook 'dired-mode-hook #'eproject-maybe-turn-on)
 (add-hook 'after-change-major-mode-hook #'eproject--after-change-major-mode-hook)
+(add-hook 'after-save-hook #'eproject--after-save-hook)
 
 (add-to-list 'auto-mode-alist '("\\.eproject$" . dot-eproject-mode))
 
