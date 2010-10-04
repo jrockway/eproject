@@ -429,7 +429,10 @@ ROOT defaults to the current buffer's project-root."
     (setf eproject-attributes-alist
           (delete-if (lambda (x) (equal (car x) root))
                      eproject-attributes-alist)))
-  (eproject-maybe-turn-on))
+  (eproject-maybe-turn-on)
+  (if (ignore-errors (eproject-root))
+      (message "Project `%s' reinitialized successfully." (eproject-name))
+    (message "Error reinitializing project!")))
 
 (defun eproject--eval-user-data (project-name root)
   "Interpret EPROJECT-EXTRA-ATTRIBUTES for PROJECT-NAME (in ROOT)."
