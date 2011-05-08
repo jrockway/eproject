@@ -195,19 +195,24 @@ buffers instead."
       (buf (eproject--handle-root-prefix-arg prefix :live-only t))
     (kill-buffer buf)))
 
+(defun eproject-open-all-project-files-1 (root)
+  "Actually do the work of opening the files in `root'.
+Returns a list naming the files that were opened."
+  (save-window-excursion
+    (loop for file in (eproject-list-project-files root)
+          collect (progn (find-file file) file))))
+
+;;;###autoload
 (defun eproject-open-all-project-files (prefix)
   "Open every file in the same project.
 
 If PREFIX arg is supplied, prompt for a project.  Otherwise,
 assume the project of the current buffer."
   (interactive "p")
-  (let ((total 0)
-        (root (eproject--handle-root-prefix-arg prefix)))
+  (let ((root (eproject--handle-root-prefix-arg prefix)))
     (message "Opening files...")
-    (save-window-excursion
-      (loop for file in (eproject-list-project-files root)
-            do (progn (find-file file) (incf total))))
-    (message "Opened %d files" total)))
+    (let ((files (eproject-open-all-project-files-1 root)))
+      (message "Opened %d files" (length files)))))
 
 ;; project management
 
