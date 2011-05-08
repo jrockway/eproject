@@ -530,26 +530,37 @@ else through unchanged."
   (when (null eproject-root)
     (error "Please do not use this directly.  Call eproject-maybe-turn-on instead.")))
 
+(defun eproject-determine-project (&optional path)
+  "Determine the eproject root and type for a file stored in PATH.  Does IO."
+  (when (not path)
+    (setq path (eproject--buffer-file-name)))
+  (let (best-root best-type)
+    (loop for type in (eproject--all-types)
+          do (let ((root (eproject--run-project-selector type path)))
+               (when (and root
+                          (or (not best-root)
+                              ;; longest filename == best match (XXX:
+                              ;; need to canonicalize?)
+                              (> (length root) (length best-root))))
+                 (setq best-root root)
+                 (setq best-type type))))
+    (cons (file-name-as-directory best-root) best-type)))
+
 (defun eproject-maybe-turn-on ()
   "Turn on eproject for the current buffer, if it is in a project."
   (interactive)
-  (let (bestroot besttype (set-before (mapcar #'car eproject-attributes-alist)))
-    (loop for type in (eproject--all-types)
-          do (let ((root (eproject--run-project-selector type)))
-               (when (and root
-                          (or (not bestroot)
-                              ;; longest filename == best match (XXX:
-                              ;; need to canonicalize?)
-                              (> (length root) (length bestroot))))
-                 (setq bestroot root)
-                 (setq besttype type))))
-    (when bestroot
-      (setq eproject-root (file-name-as-directory bestroot))
+  (let* ((def  (eproject-determine-project))
+         (root (car def))
+         (type (cdr def))
+         (set-before (mapcar #'car eproject-attributes-alist)))
+
+    (when root
+      (setq eproject-root root)
 
       ;; read .eproject file (etc.) and initialize at least :name and
       ;; :type
       (condition-case e
-          (eproject--init-attributes eproject-root besttype)
+          (eproject--init-attributes eproject-root type)
         (error (display-warning 'warning
             (format "There was a problem setting up the eproject attributes for this project: %s" e))))
 
@@ -572,10 +583,10 @@ else through unchanged."
 
       ;; run project-type hooks, which may also call into eproject-*
       ;; functions
-      (run-hooks (intern (format "%s-project-file-visit-hook" besttype)))
+      (run-hooks (intern (format "%s-project-file-visit-hook" type)))
 
       ;; return the project root; it's occasionally useful for the caller
-      bestroot)))
+      root)))
 
 (defun eproject--setup-local-variables ()
   "Setup local variables as specified by the project attribute :local-variables."
