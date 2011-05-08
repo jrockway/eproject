@@ -267,6 +267,13 @@ Run `eproject-open-all-project-files' first or just
    (cdr (assoc (eproject-root) (eproject--project-buffers)))))
 
 ;;;###autoload
+(defun eproject-compile ()
+  "Run `compile-command' in the project root."
+  (interactive)
+  (let ((default-directory (eproject-root)))
+    (call-interactively #'compile)))
+
+;;;###autoload
 (defun eproject-eshell-cd-here (&optional look-in-invisible-buffers)
   "If there is an EShell buffer, cd to the project root in that buffer.
 
@@ -293,13 +300,6 @@ With the prefix arg LOOK-IN-INVISIBLE-BUFFERS looks in buffers that are not curr
              (eshell-send-input nil t)
              eshell-buffer))))) ;; returns eshell-buf so you can focus
                                 ;; the window if you want
-
-;;;###autoload
-(defun eproject-compile ()
-  "Run `compile-command' in the project root."
-  (interactive)
-  (let ((default-directory (eproject-root)))
-    (call-interactively #'compile)))
 
 (define-key eproject-mode-map (kbd "C-c C-f") #'eproject-find-file)
 (define-key eproject-mode-map (kbd "C-c C-b") #'eproject-ibuffer)
