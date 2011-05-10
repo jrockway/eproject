@@ -544,7 +544,10 @@ else through unchanged."
                               (> (length root) (length best-root))))
                  (setq best-root root)
                  (setq best-type type))))
-    (cons (file-name-as-directory best-root) best-type)))
+    ;; returns nil when we don't find anything suitable
+    (when (and best-root best-type)
+        (cons (file-name-as-directory best-root) best-type))))
+
 
 (defun eproject-maybe-turn-on ()
   "Turn on eproject for the current buffer, if it is in a project."
