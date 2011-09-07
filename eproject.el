@@ -616,19 +616,41 @@ Argument REGEXP-LIST is a list of regexps to combine."
           (reduce (lambda (a b) (concat a "\\|" b))
                   (mapcar (lambda (f) (format "\\(?:%s\\)" f)) regexp-list))))
 
-(defun* eproject-list-project-files (&optional (root (eproject-root)))
-  "Return a list of all project files in PROJECT-ROOT."
+;;; TODO: cache this?
+(defun eproject--file-check-regexps (root)
+  "Return a pair (matcher . ignore) for the project in ROOT."
   (let ((matcher (eproject--combine-regexps
                   (eproject-attribute :relevant-files root)))
-        (ignore (eproject--combine-regexps (cons
-                 (concat (regexp-opt completion-ignored-extensions t) "$")
-                 (eproject-attribute :irrelevant-files root)))))
+        (ignore (eproject--combine-regexps
+                 (cons
+                  (concat (regexp-opt completion-ignored-extensions t) "$")
+                  (eproject-attribute :irrelevant-files root)))))
+    (cons matcher ignore)))
+
+(defun* eproject-classify-file (file &optional (root (eproject-root)))
+  "Return T if FILE would belong to the project in ROOT.
+
+No check is done to ensure that the root subsumes FILE or even
+that FILE is an absolute path."
+  ;; XXX: this logic is sort of copied from search-directory-tree.
+  ;; maybe combine?
+  (destructuring-bind (matcher . ignore) (eproject--file-check-regexps root)
+    (and (not (string-match ignore file))
+         (not (string-match ignore (file-name-nondirectory file)))
+         (string-match matcher file)
+         t)))
+
+(defun* eproject-list-project-files (&optional (root (eproject-root)))
+  "Return a list of all project files in PROJECT-ROOT."
+  (destructuring-bind (matcher . ignore) (eproject--file-check-regexps root)
     (eproject--search-directory-tree root matcher ignore)))
 
 (defun* eproject-list-project-files-relative (&optional (root (eproject-root)))
   (mapcar (lambda (file)
             (file-relative-name file root))
           (eproject-list-project-files root)))
+
+;;; dot-eproject mode
 
 (define-derived-mode dot-eproject-mode emacs-lisp-mode "dot-eproject"
   "Major mode for editing .eproject files."
