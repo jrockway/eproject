@@ -14,6 +14,7 @@
                    "\.ru$"
                    "\.yml$"
                    "\.yaml$"
+                   "\.feature$"
                    "Gemfile$"
                    "Capfile$"
                    "\.ru$"
