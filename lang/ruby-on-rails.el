@@ -1,0 +1,23 @@
+;; Ruby on Rails project
+(define-project-type ruby-on-rails (generic)
+  (and (look-for "Gemfile") (look-for "config/application.rb"))
+  :relevant-files ("\.rb$"
+                   "\.coffee$"
+                   "\.js$"
+                   "\.sass$"
+                   "\.scss$"
+                   "\.css$"
+                   "\.less$"
+                   "\.haml$"
+                   "\.slim$"
+                   "\.erb$"
+                   "\.ru$"
+                   "\.yml$"
+                   "\.yaml$"
+                   "Gemfile$"
+                   "Capfile$"
+                   "\.ru$"
+                   "README\..*$")
+  :irrelevant-files ("tmp/.*"
+                     "log/.*")
+  :main-file "Gemfile")
