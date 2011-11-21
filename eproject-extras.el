@@ -98,28 +98,29 @@ Used by `eproject-find-file'."
     (cdr (assoc (eproject--do-completing-read prompt show) alist))))
 
 (defun eproject--project-buffers ()
-  "Return an alist mapping each project root to its open buffers."
+  "Return an alist mapping each project root to its open buffers.
+
+Does not list the project if it doesn't have any buffers."
   (let ((hash (make-hash-table :test 'equal)))
-    (loop for (root attrs) in eproject-attributes-alist
-          do (setf (gethash root hash) nil))
-    (loop for (root . buf) in
-          (delete-if #'not
-              (mapcar (lambda (b) (ignore-errors (cons (eproject-root b) b)))
-                      (buffer-list)))
-          do (push buf (gethash root hash nil)))
+    (loop for x in
+          (mapcar (lambda (b) (ignore-errors (cons (eproject-root b) b)))
+                  (buffer-list))
+          when (not (null x))
+          do (puthash (car x)
+                      (cons (cdr x) (gethash (car x) hash)) hash))
     (loop for key being the hash-keys of hash
           collect (cons key (gethash key hash)))))
 
 (defun* eproject--get-name-root-alist (&key live-only)
-  (let ((buffers (eproject--project-buffers)))
-    (when (null buffers)
+  (let ((all-projects (eproject-projects))
+        (buffers      (eproject--project-buffers)))
+
+    (when (null all-projects)
       (error "No projects yet"))
-    (loop for (root . attrs) in
-          (remove-if-not (lambda (attrs)
-                           (or (not live-only)
-                               (cdr (assoc (car attrs) buffers))))
-                     eproject-attributes-alist)
-        collect (cons (getf attrs :name) root))))
+
+    (if live-only
+        (remove-if #'null (mapcar (lambda (x) (rassoc (car x) all-projects)) buffers))
+      all-projects)))
 
 (defun* eproject--read-project-name (&key live-only)
   (eproject--icomplete-read-with-alist
@@ -142,7 +143,7 @@ Used by `eproject-find-file'."
 
 (define-ibuffer-filter eproject
     "Filter buffers that have the provided eproject name"
-  (:reader (eproject--do-completing-read "Project name: " eproject-project-names)
+  (:reader (eproject--do-completing-read "Project name: " (eproject-project-names))
    :description "project name")
   (with-current-buffer buf
     (equal qualifier
@@ -164,7 +165,7 @@ Used by `eproject-find-file'."
   "Open an IBuffer window showing all buffers in the project named PROJECT-NAME."
   (interactive (list
                 (eproject--do-completing-read
-                 "Project name: " eproject-project-names)))
+                 "Project name: " (eproject-project-names))))
   (ibuffer nil (format "*%s Buffers*" project-name)
            (list (cons 'eproject project-name))))
 
@@ -229,7 +230,7 @@ If PREFIX arg is supplied, run `eproject-find-file'."
 
 ;; grep project files (contributed by Julian Snitow)
 
-;; TODO: make the grep command customizeable; to use "Ack", for example
+;; TODO: make the grep command customizable; to use "Ack", for example
 ;;;###autoload
 (defun eproject-grep (regexp)
   "Search all files in the current project for REGEXP."
@@ -242,7 +243,7 @@ If PREFIX arg is supplied, run `eproject-find-file'."
 
 (defcustom eproject-todo-expressions
   '("TODO" "XXX" "FIXME")
-  "A list of tags for eproject-todo to search for when generating the project's TODO list."
+  "A list of tags for `eproject-todo' to search for when generating the project's TODO list."
   :group 'eproject
   :type '(repeat string))
 
@@ -317,6 +318,10 @@ compile history"
 	 (ecompile (read-shell-command
 		    "eCompile command: " (car ehistory) '(ehistory . 1))))
     (compile ecompile)))
+
+(define-key eproject-mode-map (kbd "C-c C-f") #'eproject-find-file)
+(define-key eproject-mode-map (kbd "C-c C-b") #'eproject-ibuffer)
+(define-key eproject-mode-map (kbd "C-c C-k") #'eproject-compile)
 
 (provide 'eproject-extras)
 ;;; eproject-extras.el ends here
