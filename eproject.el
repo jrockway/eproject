@@ -367,11 +367,11 @@ what to look for.  Some examples:
 
 (defun eproject--linearized-isa (type &optional include-self)
   (delete-duplicates
-   (nconc
+   (append
     (if include-self (list type))
     (eproject--project-supertypes type)
     (loop for stype in (eproject--project-supertypes type)
-          nconc (eproject--linearized-isa stype)))))
+          append (eproject--linearized-isa stype)))))
 
 (defun eproject--all-types ()
   ;; this should be most specific to least specific, as long as nothing
