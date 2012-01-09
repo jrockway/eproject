@@ -4,7 +4,17 @@ necessary support functions.  The project types need not be language
 specific, and may not relate to any programming language -- there
 could be both "perl" and "catalyst" project types, for example.
 
-Please keep the following in mind:
+Right now, to use these, you should add "eproject/lang" to your
+load-path, and then require each project type that you desire:
+
+   (add-to-list 'load-path "~/elisp/eproject/lang")
+   (require 'eproject-perl)
+
+In the future, we'll enable them all automatically (and ensure that
+this doesn't break your workflow).
+
+Please keep the following in mind as you develop your own project
+types:
 
  * License your code with the same license as Emacs, the GPLv3.
 
