@@ -27,6 +27,7 @@
 (eval-when-compile
   (require 'cl))
 (require 'eproject)
+(require 'etags)
 
 (defvar eproject-tags-etags "etags"
   "The command you want to run to generate the tags file.
