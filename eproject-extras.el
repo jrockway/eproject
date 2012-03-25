@@ -189,6 +189,29 @@ list of files; used by `eproject-find-file'."
                  "Project name: " eproject-project-names)))
   (ibuffer nil (format "*%s Buffers*" project-name)
            (list (cons 'eproject project-name))))
+;; helm support
+(defun helm-eproject-get-files ()
+  (let ((matcher (format "\\(?:%s\\)"
+                         (reduce (lambda (a b) (concat a "\\|" b))
+                                 (mapcar (lambda (f) (format "\\(?:%s\\)" f))
+                                         (eproject-get-project-metadatum
+                                          (eproject-type) :relevant-files))))))
+    (eproject--search-directory-tree (eproject-root) matcher)))
+
+(defvar helm-eproject-source
+  '((name . "eproject")
+    (init . (lambda ()
+              (setq helm-eproject-last-buffer (current-buffer))))
+    (type . file)
+    (candidates . (lambda ()
+                    (with-current-buffer helm-eproject-last-buffer (helm-eproject-get-files))))))
+
+(defun helm-eproject ()
+  "helps helm to use eproject to find a file"
+  (interactive)
+  (let ((helm-sources '(helm-eproject-source)) helm-samewindow)
+    (helm nil nil nil nil nil "eproject")))
+                                        ;(global-set-key [(control x) (f) ] 'helm-eproject) ;;customize so you can call it cleanly
 
 ;; extra macros
 
