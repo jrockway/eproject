@@ -311,12 +311,15 @@ compile history"
 
 ;;;###autoload
 (defun eproject-compile ()
-  "Run `compile-command' in the project root."
+  "Run `compile' in the project root. This uses a computed history
+based on any eproject settings as well as existing compile-history
+and finally compile-command which may have been locally set by a
+mode."
   (interactive)
   (let* ((default-directory (eproject-root))
-	 (ehistory (cons (car compile-history) (eproject--build-new-history)))
+	 (ehistory (append (eproject--build-new-history) compile-history))
 	 (ecompile (read-shell-command
-		    "eCompile command: " (car ehistory) '(ehistory . 1))))
+		    "eCompile command: " compile-command 'ehistory)))
     (compile ecompile)))
 
 (define-key eproject-mode-map (kbd "C-c C-f") #'eproject-find-file)
