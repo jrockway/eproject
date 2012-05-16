@@ -294,16 +294,8 @@ With the prefix arg LOOK-IN-INVISIBLE-BUFFERS looks in buffers that are not curr
              eshell-buffer))))) ;; returns eshell-buf so you can focus
                                 ;; the window if you want
 
-;;;###autoload
-(defun eproject-compile ()
-  "Run `compile-command' in the project root."
-  (interactive)
-  (let ((default-directory (eproject-root)))
-    (call-interactively #'compile)))
-
 (define-key eproject-mode-map (kbd "C-c C-f") #'eproject-find-file)
 (define-key eproject-mode-map (kbd "C-c C-b") #'eproject-ibuffer)
-(define-key eproject-mode-map (kbd "C-c C-k") #'eproject-compile)
 
 (provide 'eproject-extras)
 ;;; eproject-extras.el ends here
