@@ -24,6 +24,10 @@
 ;; bloated, and not strictly necessary.  So now it lives here, leaving
 ;; the eproject core pristine and minimal.
 
+;;; History:
+
+;; 2012-05-16: `eproject-compile' moved to contrib/eproject-compile.el.
+
 ;;; Code:
 
 (require 'eproject)

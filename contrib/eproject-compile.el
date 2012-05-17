@@ -22,7 +22,7 @@
 ;;; Commentary:
 
 ;; This extension to eproject adds the ability to compile projects
-;; using meta-data defined in your project. For example:
+;; using meta-data defined in your project.  For example:
 ;;
 ;; (define-project-type rockbox
 ;;   (generic-git)
@@ -32,14 +32,20 @@
 ;; Now when you you call eproject-compile you will be presented with
 ;; a prompt with history pre-filled with your favourite compile sequences.
 
+
+;;; History:
+;;
+;; 2012-05-16: `eproject-compile' moved from eproject-extras to this
+;; file.  Extended by Alex Bennée to populate the history
+;; intelligently.
+
 ;;; Code:
 
 (require 'eproject)
+(require 'compile)
 
-; Build and maintain a compile-history for each project root
 (defun* eproject--build-new-history (&optional (buffer (current-buffer)))
-  "Return a list of potential compile commands suitable for use as a
-compile history"
+  "Return a list of compile commands suitable for use as a compile history."
   (eproject--do-in-buffer
    (buffer)
    (let ((potential-compiles (eproject-attribute :common-compiles))
@@ -53,10 +59,15 @@ compile history"
 
 ;;;###autoload
 (defun eproject-compile ()
-  "Run `compile' in the project root. This uses a computed history
-based on any eproject settings as well as existing compile-history
-and finally compile-command which may have been locally set by a
-mode."
+  "Run `compile' in the project root.
+
+This uses a computed history based on project attributes, the
+existing `compile-history', and `compile-command' which may have
+been locally set by a mode.
+
+To provide defaults for a project or project type, set the
+`:common-compiles' attribute to a list of strings representing
+the command to invoke."
   (interactive)
   (let* ((default-directory (eproject-root))
 	 (ehistory (append (eproject--build-new-history) compile-history))
