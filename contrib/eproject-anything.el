@@ -32,8 +32,7 @@
     (init . (lambda () (if (buffer-file-name)
                            (setq anything-eproject-root-dir
                                  (eproject-maybe-turn-on))
-                         (setq anything-eproject-root-dir 'nil)
-                         )))
+                         (setq anything-eproject-root-dir 'nil))))
     (candidates . (lambda () (if anything-eproject-root-dir
                                  (eproject-list-project-files
                                   anything-eproject-root-dir))))
