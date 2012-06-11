@@ -56,7 +56,7 @@
 ;;; Code:
 
 ;; helm support
-(require 'helm)
+(require 'helm-files)
 (require 'eproject)
 (require 'cl)
 
