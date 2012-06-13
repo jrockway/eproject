@@ -56,17 +56,22 @@
 ;;; Code:
 
 ;; helm support
-(require 'helm)
+(require 'helm-files)
 (require 'eproject)
 (require 'cl)
 
+(defun helm-eproject-build-matcher (matcher-type)
+  (format "\\(?:%s\\)"
+          (reduce (lambda (a b) (concat a "\\|" b))
+                  (mapcar (lambda (f) (format "\\(?:%s\\)" f))
+                          (eproject-get-project-metadatum
+                           (eproject-type) matcher-type)))))
+
 (defun helm-eproject-get-files ()
-  (let ((matcher (format "\\(?:%s\\)"
-                         (reduce (lambda (a b) (concat a "\\|" b))
-                                 (mapcar (lambda (f) (format "\\(?:%s\\)" f))
-                                         (eproject-get-project-metadatum
-                                          (eproject-type) :relevant-files))))))
-    (eproject--search-directory-tree (eproject-root) matcher)))
+  (eproject--search-directory-tree
+   (eproject-root)
+   (helm-eproject-build-matcher :relevant-files)
+   (helm-eproject-build-matcher :irrelevant-files)))
 
 (defvar helm-eproject-source
   '((name . " helm-eproject: ")
@@ -74,7 +79,8 @@
               (setq helm-eproject-last-buffer (current-buffer))))
     (type . file)
     (candidates . (lambda ()
-                    (with-current-buffer helm-eproject-last-buffer (helm-eproject-get-files))))))
+                    (with-current-buffer helm-eproject-last-buffer
+                      (helm-eproject-get-files))))))
 
 (defun helm-eproject ()
   "helps helm to use eproject to find a file"
