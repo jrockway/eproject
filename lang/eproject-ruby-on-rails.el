@@ -3,26 +3,7 @@
 ;; Ruby on Rails project
 (define-project-type ruby-on-rails (generic)
   (and (look-for "Gemfile") (look-for "config/application.rb"))
-  :relevant-files ("\.rb$"
-                   "\.coffee$"
-                   "\.js$"
-                   "\.sass$"
-                   "\.scss$"
-                   "\.css$"
-                   "\.less$"
-                   "\.haml$"
-                   "\.slim$"
-                   "\.erb$"
-                   "\.ru$"
-                   "\.yml$"
-                   "\.yaml$"
-                   "\.feature$"
-                   "Gemfile$"
-                   "Capfile$"
-                   "\.ru$"
-                   "README\..*$")
-  :irrelevant-files ("tmp/.*"
-                     "log/.*")
+  :irrelevant-files ("app/assets/images/.*" "tmp/.*" "log/.*" "public/.*" "vendor/.*" ".*\\.sqlite?")
   :main-file "Gemfile")
 
 (provide 'eproject-ruby-on-rails)
