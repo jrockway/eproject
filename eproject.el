@@ -352,7 +352,7 @@ what to look for.  Some examples:
     (otherwise (error "Don't know how to handle %s in LOOK-FOR!" type))))
 
 (defun eproject--buffer-file-name ()
-  (or (buffer-file-name) (and (eq major-mode 'dired-mode)
+  (or (buffer-file-name) (and (derived-mode-p 'dired-mode)
                               (expand-file-name (if (consp dired-directory)
                                                     (car dired-directory)
                                                   dired-directory)))))
