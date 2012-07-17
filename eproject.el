@@ -711,7 +711,7 @@ that FILE is an absolute path."
 
 (add-hook 'eproject-project-change-hook #'eproject--maybe-reinitialize)
 
-(add-to-list 'auto-mode-alist '("\\.eproject$" . dot-eproject-mode))
+(add-to-list 'auto-mode-alist '("\\.eproject\\'" . dot-eproject-mode))
 
 (provide 'eproject)
 ;;; eproject.el ends here
