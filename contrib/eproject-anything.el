@@ -23,7 +23,7 @@
 ;; (require 'eproject)
 ;; (require 'eproject-anything)
 ;; (global-set-key (kbd "s-L") 'anything-eproject-files)
-;; (global-set-key (kbd "s-b") 'anything-for-buffers)
+;; (global-set-key (kbd "s-b") 'anything-eproject-buffers)
 
 ;;; Code:
 ;;
