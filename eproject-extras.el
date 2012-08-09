@@ -101,6 +101,7 @@ Used by `eproject-find-file'."
   (let ((show (mapcar (lambda (x) (car x)) alist)))
     (cdr (assoc (eproject--do-completing-read prompt show) alist))))
 
+;;;###autoload
 (defun eproject--project-buffers ()
   "Return an alist mapping each project root to its open buffers.
 
