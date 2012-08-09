@@ -28,6 +28,8 @@
 ;;; Code:
 ;;
 
+(declare-function anything "anything")
+
 ;;;###autoload
 (defvar anything-c-source-eproject-files
   '((name . "Files in eProject")
