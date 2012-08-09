@@ -27,6 +27,8 @@
 
 ;;; Code:
 ;;
+
+;;;###autoload
 (defvar anything-c-source-eproject-files
   '((name . "Files in eProject")
     (init . (lambda () (if (buffer-file-name)
@@ -39,6 +41,7 @@
     (type . file))
   "Search for files in the current eProject.")
 
+;;;###autoload
 (defvar anything-c-source-eproject-buffers
   '((name . "Buffers in this eProject")
     (init . (lambda () (if (buffer-file-name)
@@ -54,6 +57,7 @@
     (type . buffer))
   "Search for buffers in this project.")
 
+;;;###autoload
 (defun anything-eproject-files ()
   "Preconfigured `anything' for searching files inside current eproject."
   (interactive)
@@ -62,6 +66,7 @@
         anything-samewindow)
     (anything nil nil nil nil nil "eproject")))
 
+;;;###autoload
 (defun anything-eproject-buffers ()
   "Preconfigured `anything' for opening buffers. Searches for
 buffers in the current project, then other buffers, also gives
