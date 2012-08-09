@@ -62,7 +62,7 @@
         anything-samewindow)
     (anything nil nil nil nil nil "eproject")))
 
-(defun anything-for-buffers ()
+(defun anything-eproject-buffers ()
   "Preconfigured `anything' for opening buffers. Searches for
 buffers in the current project, then other buffers, also gives
 option of recentf. Replaces switch-to-buffer."
