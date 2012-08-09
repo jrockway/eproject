@@ -323,6 +323,15 @@ become project attributes."
 (define-project-type generic-git (generic) (look-for ".git")
   :irrelevant-files ("^[.]" "^[#]" ".git/"))
 
+(define-project-type generic-hg (generic) (look-for ".hg")
+  :irrelevant-files ("^[.]" "^[#]" ".hg/"))
+
+(define-project-type generic-bzr (generic) (look-for ".bzr")
+  :irrelevant-files ("^[.]" "^[#]" ".bzr/"))
+
+(define-project-type generic-darcs (generic) (look-for "_darcs")
+  :irrelevant-files ("^[.]" "^[#]" "_darcs/"))
+
 (defun eproject--type-info (type)
   (or
    (assoc type eproject-project-types)
