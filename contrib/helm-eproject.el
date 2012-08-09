@@ -88,7 +88,9 @@
   (helm :sources '(helm-eproject-source)
         :buffer "*Helm Eproject*"))
 
-(global-set-key [(control x) (f)] 'helm-eproject) ;;set-fill-column is just useless ;)
+(defun eproject-helm-configure ()
+  "Bind C-x f to `helm-eproject'."
+  (global-set-key [(control x) (f)] 'helm-eproject))
 
 (provide 'helm-eproject)
 
