@@ -600,18 +600,20 @@ else through unchanged."
 
 (defun eproject--search-directory-tree (directory file-regexp ignore-regexp)
   (loop for file in (directory-files (file-name-as-directory directory) t "^[^.]" t)
-        when (and (not (file-directory-p file))
-                  (not (string-match ignore-regexp file))
-                  (not (string-match ignore-regexp (file-name-nondirectory file)))
-                  (string-match file-regexp file))
-        collect file into files
-        when (file-directory-p file)
-        collect file into directories
+        unless (string-match ignore-regexp file)
+          if (not (file-directory-p file))
+            when (and (not (string-match ignore-regexp
+                                         (file-name-nondirectory file)))
+                      (string-match file-regexp file))
+              collect file into files end
+          else
+            collect file into directories
         finally return
           (nconc files
                  (loop for dir in directories
                        nconc (eproject--search-directory-tree dir file-regexp
                                                               ignore-regexp)))))
+
 (defun eproject-assert-type (type)
   "Assert that the current buffer is in a project of type TYPE."
   (when (not (memq type (eproject--linearized-isa (eproject-type) t)))
