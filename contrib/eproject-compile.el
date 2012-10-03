@@ -72,7 +72,7 @@ the command to invoke."
   (let* ((default-directory (eproject-root))
 	 (ehistory (append (eproject--build-new-history) compile-history))
 	 (ecompile (read-shell-command
-		    "eCompile command: " compile-command 'ehistory)))
+		    "Compile command: " compile-command 'ehistory)))
     (compile ecompile)))
 
 (define-key eproject-mode-map (kbd "C-c C-k") #'eproject-compile)
