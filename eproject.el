@@ -521,16 +521,13 @@ else through unchanged."
   "A minor mode for buffers that are a member of an eproject project."
   nil " Project" eproject-mode-map
   (when (null eproject-root)
-    (error "Please do not use this directly.  Call eproject-maybe-turn-on instead."))
-  (if eproject-mode
-      (add-hook 'after-change-major-mode-hook
-                #'eproject--after-change-major-mode-hook nil t)
-    (remove-hook 'after-change-major-mode-hook
-                 #'eproject--after-change-major-mode-hook t)))
+    (error "Please do not use this directly.  Call eproject-maybe-turn-on instead.")))
 
 (defun eproject-maybe-turn-on ()
   "Turn on eproject for the current buffer, if it is in a project."
   (interactive)
+  (add-hook 'after-change-major-mode-hook
+            #'eproject--after-change-major-mode-hook nil t)
   (let ((set-before (mapcar #'car eproject-attributes-alist))
         (type-cells (mapcar
                      (lambda (type) (cons type (eproject--project-selector type)))
@@ -541,7 +538,7 @@ else through unchanged."
     (let ((type
            (catch 'found
              (dolist (parent (eproject--build-parent-candidates
-                                  (file-name-directory file)))
+                              (file-name-directory file)))
                (loop for (type . selector) in type-cells
                      for root = (eproject--run-project-selector selector parent)
                      do (when root
