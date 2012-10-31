@@ -537,7 +537,12 @@ else through unchanged."
   "A minor mode for buffers that are a member of an eproject project."
   nil " Project" eproject-mode-map
   (when (null eproject-root)
-    (error "Please do not use this directly.  Call eproject-maybe-turn-on instead.")))
+    (error "Please do not use this directly.  Call eproject-maybe-turn-on instead."))
+  (if eproject-mode
+      (add-hook 'after-change-major-mode-hook
+                #'eproject--after-change-major-mode-hook nil t)
+    (remove-hook 'after-change-major-mode-hook
+                 #'eproject--after-change-major-mode-hook t)))
 
 (defun eproject-maybe-turn-on ()
   "Turn on eproject for the current buffer, if it is in a project."
@@ -691,6 +696,8 @@ that FILE is an absolute path."
              (not eproject-root))
     (eproject-maybe-turn-on)))
 
+(put 'eproject--after-change-major-mode-hook 'permanent-local-hook t)
+
 (defun eproject--after-save-hook ()
   ;; TODO: perhaps check against relevant-files or irrelevant-files
   ;; regex?  I'm avoiding this now because I'd rather not force the
@@ -701,7 +708,6 @@ that FILE is an absolute path."
 
 (add-hook 'find-file-hook #'eproject-maybe-turn-on)
 (add-hook 'dired-mode-hook #'eproject-maybe-turn-on)
-(add-hook 'after-change-major-mode-hook #'eproject--after-change-major-mode-hook)
 (add-hook 'after-save-hook #'eproject--after-save-hook)
 
 (add-hook 'eproject-project-change-hook #'eproject--maybe-reinitialize)
