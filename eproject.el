@@ -332,7 +332,7 @@ become project attributes."
 (defun eproject--project-selector (type)
   (nth 2 (eproject--type-info type)))
 
-(defun* eproject--look-for-impl (dir expression &optional (type :filename))
+(defun* eproject--look-for-impl (directory expression &optional (type :filename))
   "Implements the LOOK-FOR function that is flet-bound during
 `eproject--run-project-selector'.  EXPRESSION and TYPE specify
 what to look for.  Some examples:
