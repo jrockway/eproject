@@ -25,9 +25,9 @@
 
 ### Code:
 
-cdp(){
-    # Go to currently active project root in Emacs
-    EMACS_CWP=$(emacsclient -e "
+# Go to currently active project root in Emacs
+cdp() {
+    local EMACS_CWP=$(emacsclient -a false -e "
   (let ((current-buffer
          (nth 1 (assoc 'buffer-list
                        (nth 1 (nth 1 (current-frame-configuration)))))))
@@ -38,7 +38,9 @@ cdp(){
                 (file-name-directory filename)
               default-directory)))))
     " | sed 's/^"\(.*\)"$/\1/')
-
-    echo "chdir to $EMACS_CWP"
-    cd "$EMACS_CWP"
+    if [ -d "$EMACS_CWP" ]; then
+        cd "$EMACS_CWP"
+    else
+        return 1
+    fi
 }
