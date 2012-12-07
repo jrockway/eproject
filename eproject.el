@@ -71,10 +71,10 @@
 ;; will make your type work correctly even if you don't define any of
 ;; your own metadata.
 ;;
-;; The next argument is a form that will be executed with the filename
-;; that was just opened bound to FILE.  It is expected to return the
-;; project root, or nil if FILE is not in a project of this type.  The
-;; look-for function will look up the directory tree for a file that
+;; The next argument is a form that will be executed with DIR bound to
+;; each of the opened file's parent directories, until the root is found.
+;; It is expected to return t if the directory is the root.  The
+;; look-for function will look in the current directory for a file that
 ;; is named the same as its argument (see the docstring for
 ;; `eproject--look-for-impl' for all the details).  You can write any
 ;; Lisp here you like; we'll see some more examples later.  (You only
@@ -276,8 +276,8 @@ and ATTRIBUTES."
 (defmacro define-project-type (type supertypes selector &rest metadata)
   "Define a new project type TYPE that inherits from SUPERTYPES.
 
-SELECTOR is a form that is given a filename FILE and returns the
-project root if it is of this type of project, or NIL otherwise.
+SELECTOR is a form that is given a directory DIR and returns t
+if it is of this type of project, or nil otherwise.
 
 Optional argument METADATA is a plist of metadata that will
 become project attributes."
@@ -288,7 +288,7 @@ become project attributes."
              (nconc (assq-delete-all ',type eproject-project-types)
                     (list
                      (list ',type ',supertypes
-                           (lambda (file) ,selector)
+                           (lambda (dir) ,selector)
                            ',metadata))))))
 
 (defun eproject--build-parent-candidates (start-at)
@@ -298,17 +298,6 @@ become project attributes."
           ;; file-name-as-directory application, but i don't want to
           ;; debug it if it doesn't :)
           collect (file-name-as-directory (apply #'concat (reverse x)))))
-
-(defun eproject--scan-parents-for (start-at predicate)
-  "Call PREDICATE with each parent directory of START-AT, returning the path to the first directory where PREDICATE returns T."
-  (find-if predicate (eproject--build-parent-candidates
-                          (file-name-as-directory start-at))))
-
-(defun eproject--find-file-named (start-at filename)
-  "Starting in directory START-AT, recursively check parent directories for a file named FILENAME.  Return the directory where the file is first found; return NIL otherwise."
-  (eproject--scan-parents-for start-at
-   (lambda (directory) ; note that directory always has the path separator on the end
-     (file-exists-p (concat directory filename)))))
 
 ;; TODO: sugar around lambda/lambda, which is ugly
 (define-project-type generic () nil
@@ -343,21 +332,18 @@ become project attributes."
 (defun eproject--project-selector (type)
   (nth 2 (eproject--type-info type)))
 
-(defun* eproject--look-for-impl (file expression &optional (type :filename))
+(defun* eproject--look-for-impl (directory expression &optional (type :filename))
   "Implements the LOOK-FOR function that is flet-bound during
 `eproject--run-project-selector'.  EXPRESSION and TYPE specify
 what to look for.  Some examples:
 
-   (look-for \"Makefile.PL\") ; look up the directory tree for a file called Makefile.PL
+   (look-for \"Makefile.PL\") ; look for a file called Makefile.PL
    (look-for \"*.PL\" :glob) ; look for a file matching *.PL
 "
   (case type
-    (:filename (eproject--find-file-named file expression))
-    (:glob (eproject--scan-parents-for (file-name-directory file)
-             (lambda (current-directory)
-               (let ((default-directory current-directory))
-                 (and (not (equal file current-directory))
-                      (> (length (file-expand-wildcards expression)) 0))))))
+    (:filename (file-exists-p (concat directory expression)))
+    (:glob (let ((default-directory current-directory))
+             (> (length (file-expand-wildcards expression)) 0)))
     (otherwise (error "Don't know how to handle %s in LOOK-FOR!" type))))
 
 (defun eproject--buffer-file-name ()
@@ -366,13 +352,11 @@ what to look for.  Some examples:
                                                     (car dired-directory)
                                                   dired-directory)))))
 
-(defun* eproject--run-project-selector (type &optional (file (eproject--buffer-file-name)))
-  "Run the selector associated with project type TYPE."
-  (when (not file)
-    (error "Buffer '%s' has no file name" (current-buffer)))
+(defun* eproject--run-project-selector (selector directory)
+  "Run SELECTOR in the DIRECTORY."
   (flet ((look-for (expr &optional (expr-type :filename))
-                   (funcall #'eproject--look-for-impl file expr expr-type)))
-    (funcall (eproject--project-selector type) file)))
+                   (funcall #'eproject--look-for-impl directory expr expr-type)))
+    (funcall selector directory)))
 
 (defun eproject--linearized-isa (type &optional include-self)
   (delete-duplicates
@@ -542,49 +526,54 @@ else through unchanged."
 (defun eproject-maybe-turn-on ()
   "Turn on eproject for the current buffer, if it is in a project."
   (interactive)
-  (let (bestroot besttype (set-before (mapcar #'car eproject-attributes-alist)))
-    (loop for type in (eproject--all-types)
-          do (let ((root (eproject--run-project-selector type)))
-               (when (and root
-                          (or (not bestroot)
-                              ;; longest filename == best match (XXX:
-                              ;; need to canonicalize?)
-                              (> (length root) (length bestroot))))
-                 (setq bestroot root)
-                 (setq besttype type))))
-    (when bestroot
-      (setq eproject-root (file-name-as-directory bestroot))
+  (add-hook 'after-change-major-mode-hook
+            #'eproject--after-change-major-mode-hook nil t)
+  (let ((set-before (mapcar #'car eproject-attributes-alist))
+        (type-cells (mapcar
+                     (lambda (type) (cons type (eproject--project-selector type)))
+                     (eproject--all-types)))
+        (file (eproject--buffer-file-name)))
+    (when (not file)
+      (error "Buffer '%s' has no file name" (current-buffer)))
+    (let ((type
+           (catch 'found
+             (dolist (parent (eproject--build-parent-candidates
+                              (file-name-directory file)))
+               (loop for (type . selector) in type-cells
+                     for root = (eproject--run-project-selector selector parent)
+                     do (when root
+                          (setq eproject-root (file-name-as-directory parent))
+                          (throw 'found type)))))))
+      (when eproject-root
+        ;; read .eproject file (etc.) and initialize at least :name and
+        ;; :type
+        (condition-case e
+            (eproject--init-attributes eproject-root type)
+          (error (display-warning 'warning
+              (format "There was a problem setting up the eproject attributes or this project: %s" e))))
 
-      ;; read .eproject file (etc.) and initialize at least :name and
-      ;; :type
-      (condition-case e
-          (eproject--init-attributes eproject-root besttype)
-        (error (display-warning 'warning
-            (format "There was a problem setting up the eproject attributes for this project: %s" e))))
+        ;; with :name and :type set, it's now safe to turn on eproject
+        (eproject-mode 1)
 
-      ;; with :name and :type set, it's now safe to turn on eproject
-      (eproject-mode 1)
+        ;; initialize buffer-local variables that the project defines
+        ;; (called after we turn on eproject-mode, so we can call
+        ;; eproject-* functions cleanly)
+        (condition-case e
+            (eproject--setup-local-variables)
+          (error (display-warning 'warning
+              (format "Problem initializing project-specific local-variables in %s: %s" (eproject--buffer-file-name) e))))
 
-      ;; initialize buffer-local variables that the project defines
-      ;; (called after we turn on eproject-mode, so we can call
-      ;; eproject-* functions cleanly)
-      (condition-case e
-          (eproject--setup-local-variables)
-        (error (display-warning 'warning
-          (format "Problem initializing project-specific local-variables in %s: %s"
-                  (eproject--buffer-file-name) e))))
+        ;; run the first-buffer hooks if this is the first time we've
+        ;; seen this particular project root.
+        (when (not (member eproject-root set-before))
+          (run-hooks 'eproject-first-buffer-hook))
 
-      ;; run the first-buffer hooks if this is the first time we've
-      ;; seen this particular project root.
-      (when (not (member eproject-root set-before))
-        (run-hooks 'eproject-first-buffer-hook))
+        ;; run project-type hooks, which may also call into eproject-*
+        ;; functions
+        (run-hooks (intern (format "%s-project-file-visit-hook" type)))
 
-      ;; run project-type hooks, which may also call into eproject-*
-      ;; functions
-      (run-hooks (intern (format "%s-project-file-visit-hook" besttype)))
-
-      ;; return the project root; it's occasionally useful for the caller
-      bestroot)))
+        ;; return the project root; it's occasionally useful for the caller
+        eproject-root))))
 
 (defun eproject--setup-local-variables ()
   "Setup local variables as specified by the project attribute :local-variables."
@@ -691,6 +680,8 @@ that FILE is an absolute path."
              (not eproject-root))
     (eproject-maybe-turn-on)))
 
+(put 'eproject--after-change-major-mode-hook 'permanent-local-hook t)
+
 (defun eproject--after-save-hook ()
   ;; TODO: perhaps check against relevant-files or irrelevant-files
   ;; regex?  I'm avoiding this now because I'd rather not force the
@@ -701,7 +692,6 @@ that FILE is an absolute path."
 
 (add-hook 'find-file-hook #'eproject-maybe-turn-on)
 (add-hook 'dired-mode-hook #'eproject-maybe-turn-on)
-(add-hook 'after-change-major-mode-hook #'eproject--after-change-major-mode-hook)
 (add-hook 'after-save-hook #'eproject--after-save-hook)
 
 (add-hook 'eproject-project-change-hook #'eproject--maybe-reinitialize)
