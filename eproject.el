@@ -524,11 +524,13 @@ else through unchanged."
               (eproject--interpret-metadata
                (eproject--eval-user-data name root) root))
 
-             ;; now compute the final list of attributes
-             (data (nconc user-data class-and-config-data)))
+             (name-and-type (list :type type :name name))
 
-        (add-to-list 'eproject-attributes-alist
-                     (cons root (nconc (list :type type :name name) data)))))))
+             ;; now compute the final list of attributes
+             (data
+              (nconc user-data (nconc name-and-type class-and-config-data))))
+
+        (add-to-list 'eproject-attributes-alist (cons root data))))))
 
 (defvar eproject-mode-map (make-sparse-keymap)
   "Keybindings while in eproject-mode")
