@@ -705,10 +705,8 @@ that FILE is an absolute path."
 (add-hook 'find-file-hook #'eproject-maybe-turn-on)
 (add-hook 'dired-mode-hook #'eproject-maybe-turn-on)
 
-(defun eproject-magit-mode-hook ()
-  (when (derived-mode-p 'magit-status-mode)
-    (eproject-maybe-turn-on)))
-(add-hook 'magit-mode-hook #'eproject-magit-mode-hook)
+(eval-after-load 'magit
+  (add-hook 'magit-status-mode-hook #'eproject-maybe-turn-on))
 
 (add-hook 'after-change-major-mode-hook #'eproject--after-change-major-mode-hook)
 (add-hook 'after-save-hook #'eproject--after-save-hook)
