@@ -158,6 +158,17 @@ Does not list the project if it doesn't have any buffers."
   (ignore-errors (eproject-name)))
 
 ;;;###autoload
+(defun eproject-set-ibuffer-filter-groups ()
+  "Set the current ibuffer filter groups to filter by eproject."
+  (interactive)
+  (set-variable 'ibuffer-filter-groups
+		(mapcar (lambda (project)
+			  (list (format "%s: %s" (car project) (cdr project))
+				`(eproject-root . ,(cdr project))))
+			(eproject-projects)))
+  (ibuffer-update nil t))
+
+;;;###autoload
 (defun eproject-ibuffer (prefix)
   "Open an IBuffer window showing all buffers in the current project, or named project if PREFIX arg is supplied."
   (interactive "p")
