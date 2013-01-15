@@ -221,6 +221,24 @@
   :link '(emacs-library-link :tag "Optional extras" "eproject-extras.el")
   :link '(url-link :tag "Github wiki" "http://wiki.github.com/jrockway/eproject"))
 
+(defcustom eproject-prefer-subproject t
+  "Whether to prefer to group files together in their subprojects
+rather than their superprojects.
+
+Example:
+Consider opening foo.code inside the following file structure:
+~
+|_ super
+   |_.eproject
+   |_ sub
+      |_.eproject
+      |_foo.code
+
+If `eproject-prefer-subproject' is non-nil, foo.code's eproject-root will be
+~/super/sub whereas if it is nil, then its eproject-root will be ~/super."
+  :group 'eproject
+  :type 'boolean)
+
 (defvar eproject-root nil
   "A buffer-local variable set to the root of its eproject
   project.  NIL if it isn't in an eproject.  Your code should
@@ -263,6 +281,11 @@ ATTRIBUTES is a plist of attributes.")
 
 (defvar eproject-project-change-hook nil
   "Hook that's run when a project is changed; currently this means when a file in the project is saved.")
+
+(defun eproject-toggle-prefer-subproject (what)
+  "Toggle the value of `eproject-prefer-subproject'."
+  (interactive)
+  (setq eproject-prefer-subproject (not eproject-prefer-subproject)))
 
 (defun define-project-attribute (key attributes)
   "Define extra attributes to be applied to projects.
@@ -549,7 +572,9 @@ else through unchanged."
                           (or (not bestroot)
                               ;; longest filename == best match (XXX:
                               ;; need to canonicalize?)
-                              (> (length root) (length bestroot))))
+                              (if eproject-prefer-subproject
+                                  (> (length root) (length bestroot))
+                                (< (length root) (length bestroot)))))
                  (setq bestroot root)
                  (setq besttype type))))
     (when bestroot
