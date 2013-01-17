@@ -282,7 +282,7 @@ ATTRIBUTES is a plist of attributes.")
 (defvar eproject-project-change-hook nil
   "Hook that's run when a project is changed; currently this means when a file in the project is saved.")
 
-(defun eproject-toggle-prefer-subproject (what)
+(defun eproject-toggle-prefer-subproject ()
   "Toggle the value of `eproject-prefer-subproject'."
   (interactive)
   (setq eproject-prefer-subproject (not eproject-prefer-subproject)))
