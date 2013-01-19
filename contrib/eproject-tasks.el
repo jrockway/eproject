@@ -35,7 +35,8 @@
 (defvar eproject-tasks-sources
   '(eproject-tasks-source-path
     eproject-tasks-source-compile
-    eproject-tasks-source-metadata)
+    eproject-tasks-source-metadata
+    eproject-tasks-source-attribute)
   "A list of TASK-SOURCE.
 
 TASK-SOURCE is a list starts with a string NAME and the rest is
@@ -78,8 +79,15 @@ is a plist.  Allowed keys are:
   (apply #'append (mapcar #'eproject-tasks-process-task-source
                           (or sources eproject-tasks-sources))))
 
-
+
 ;;; Predefined sources
+
+(defvar eproject-tasks-source-attribute
+  '("Attribute"
+    :generator eproject-tasks-source-attribute-generate))
+
+(defun eproject-tasks-source-attribute-generate ()
+  (eproject-attribute :tasks))
 
 (defvar eproject-tasks-source-metadata
   '("Metadata"
