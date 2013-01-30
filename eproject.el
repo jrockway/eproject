@@ -581,6 +581,8 @@ else through unchanged."
 
       ;; run project-type hooks, which may also call into eproject-*
       ;; functions
+      (mapc (lambda (x) (run-hooks (intern (format "%s-project-file-visit-hook" x))))
+            (eproject--project-supertypes besttype))
       (run-hooks (intern (format "%s-project-file-visit-hook" besttype)))
 
       ;; return the project root; it's occasionally useful for the caller
