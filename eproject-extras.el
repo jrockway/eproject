@@ -136,6 +136,43 @@ Does not list the project if it doesn't have any buffers."
       (eproject--read-project-name :live-only live-only)
     (eproject-root)))
 
+(defun eproject--generic-switch-to-buffer (prefix switch-func)
+  (let* ((root (eproject--handle-root-prefix-arg prefix :live-only t))
+	 (calling-buffer (current-buffer))
+	 (buffers (delq nil (mapcar (lambda (buf)
+				      (ignore-errors
+					(when (equal root (eproject-root buf))
+					  (unless (eq buf calling-buffer)
+					    buf))))
+				    (buffer-list))))
+	 (chosen-buf (eproject--do-completing-read
+		      "switch to buffer in project: " buffers)))
+    (funcall switch-func chosen-buf)))
+
+;;;###autoload
+(defun eproject-switch-to-buffer (&optional prefix)
+  "Interactively switch to a buffer belonging in the same project.
+
+With prefix argument 4, first ask which project."
+  (interactive "p")
+  (eproject--generic-switch-to-buffer prefix #'switch-to-buffer))
+
+;;;###autoload
+(defun eproject-switch-to-buffer-other-window (&optional prefix)
+  "Interactively switch in another window to a buffer belonging in the same project.
+
+With prefix argument 4, first ask which project."
+  (interactive "p")
+  (eproject--generic-switch-to-buffer prefix #'switch-to-buffer-other-window))
+
+;;;###autoload
+(defun eproject-switch-to-buffer-other-frame (&optional prefix)
+  "Interactively switch in another frame to a buffer belonging in the same project.
+
+With prefix argument 4, first ask which project."
+  (interactive "p")
+  (eproject--generic-switch-to-buffer prefix #'switch-to-buffer-other-frame))
+
 ;; ibuffer support
 
 (define-ibuffer-filter eproject-root
@@ -156,6 +193,17 @@ Does not list the project if it doesn't have any buffers."
 
 (define-ibuffer-column eproject (:name "Project" :inline t)
   (ignore-errors (eproject-name)))
+
+;;;###autoload
+(defun eproject-set-ibuffer-filter-groups ()
+  "Set the current ibuffer filter groups to filter by eproject."
+  (interactive)
+  (set-variable 'ibuffer-filter-groups
+		(mapcar (lambda (project)
+			  (list (format "%s: %s" (car project) (cdr project))
+				`(eproject-root . ,(cdr project))))
+			(eproject-projects)))
+  (ibuffer-update nil t))
 
 ;;;###autoload
 (defun eproject-ibuffer (prefix)
@@ -301,6 +349,9 @@ With the prefix arg LOOK-IN-INVISIBLE-BUFFERS looks in buffers that are not curr
 
 (define-key eproject-mode-map (kbd "C-c C-f") #'eproject-find-file)
 (define-key eproject-mode-map (kbd "C-c C-b") #'eproject-ibuffer)
+(define-key eproject-mode-map (kbd "C-c b") #'eproject-switch-to-buffer)
+(define-key eproject-mode-map (kbd "C-c 4 b") #'eproject-switch-to-buffer-other-window)
+(define-key eproject-mode-map (kbd "C-c 5 b") #'eproject-switch-to-buffer-other-frame)
 
 (provide 'eproject-extras)
 ;;; eproject-extras.el ends here
