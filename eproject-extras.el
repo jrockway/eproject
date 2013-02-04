@@ -151,7 +151,7 @@ Does not list the project if it doesn't have any buffers."
 
 ;;;###autoload
 (defun eproject-switch-to-buffer (&optional prefix)
-  "Interactively switch to a buffer belonging in the same project.
+  "Interactively switch to a buffer belonging to the same project.
 
 With prefix argument 4, first ask which project."
   (interactive "p")
@@ -159,7 +159,7 @@ With prefix argument 4, first ask which project."
 
 ;;;###autoload
 (defun eproject-switch-to-buffer-other-window (&optional prefix)
-  "Interactively switch in another window to a buffer belonging in the same project.
+  "Interactively switch the other window to a buffer belonging to the same project.
 
 With prefix argument 4, first ask which project."
   (interactive "p")
@@ -167,7 +167,7 @@ With prefix argument 4, first ask which project."
 
 ;;;###autoload
 (defun eproject-switch-to-buffer-other-frame (&optional prefix)
-  "Interactively switch in another frame to a buffer belonging in the same project.
+  "Interactively switch the other frame to a buffer belonging to the same project.
 
 With prefix argument 4, first ask which project."
   (interactive "p")
