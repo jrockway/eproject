@@ -46,7 +46,7 @@ a (possibly empty) list of TASKs runnable on the current project.
 Each TASK is a list starts with a string NAME and the rest
 is a plist.  Allowed keys are:
 
-`:func' : function
+`:call' : function
     Lisp function to run.
 `:shell' : string
     Shell command to run.
@@ -57,7 +57,7 @@ is a plist.  Allowed keys are:
 `:confirm' : boolean
     Confirm before running task.
 
-`:func' or `:shell' must be given.")
+`:call' or `:shell' must be given.")
 
 (defun eproject-tasks-available-p (task)
   (destructuring-bind (name &key cd available &allow-other-keys)
