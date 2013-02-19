@@ -10,4 +10,4 @@
           ("test" :shell "grunt test")))
 
 
-(provide 'eproject-javascript)
+(provide 'eproject-javascript-grunt)
