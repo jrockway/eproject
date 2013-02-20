@@ -28,7 +28,7 @@
 # Go to currently active project root in Emacs
 cdp() {
     local EMACS_CWP=$(emacsclient -a false -e \
-        "(eproject-print-current-project-working-directory)" \
+        "(eproject-current-working-directory)" \
         | sed 's/^"\(.*\)"$/\1/')
     if [ -d "$EMACS_CWP" ]; then
         cd "$EMACS_CWP"

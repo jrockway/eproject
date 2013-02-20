@@ -337,8 +337,8 @@ With the prefix arg LOOK-IN-INVISIBLE-BUFFERS looks in buffers that are not curr
                                 ;; the window if you want
 
 ;;;###autoload
-(defun eproject-print-current-project-working-directory ()
-  "Print the project root directory for most recently visited
+(defun eproject-current-working-directory ()
+  "Return the project root directory for most recently visited
 buffer.  Fallback to the directory of the buffer when it is
 not in a project."
   (let ((current-buffer (car (frame-parameter nil 'buffer-list))))
