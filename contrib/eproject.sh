@@ -27,17 +27,9 @@
 
 # Go to currently active project root in Emacs
 cdp() {
-    local EMACS_CWP=$(emacsclient -a false -e "
-  (let ((current-buffer
-         (nth 1 (assoc 'buffer-list
-                       (nth 1 (nth 1 (current-frame-configuration)))))))
-    (or (ignore-errors (eproject-root current-buffer))
-        (with-current-buffer current-buffer
-          (let ((filename (buffer-file-name)))
-            (if filename
-                (file-name-directory filename)
-              default-directory)))))
-    " | sed 's/^"\(.*\)"$/\1/')
+    local EMACS_CWP=$(emacsclient -a false -e \
+        "(eproject-current-working-directory)" \
+        | sed 's/^"\(.*\)"$/\1/')
     if [ -d "$EMACS_CWP" ]; then
         cd "$EMACS_CWP"
     else
