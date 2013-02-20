@@ -336,6 +336,19 @@ With the prefix arg LOOK-IN-INVISIBLE-BUFFERS looks in buffers that are not curr
              eshell-buffer))))) ;; returns eshell-buf so you can focus
                                 ;; the window if you want
 
+;;;###autoload
+(defun eproject-print-current-project-working-directory ()
+  "Print the project root directory for most recently visited
+buffer.  Fallback to the directory of the buffer when it is
+not in a project."
+  (let ((current-buffer (car (frame-parameter nil 'buffer-list))))
+    (or (ignore-errors (eproject-root current-buffer))
+        (with-current-buffer current-buffer
+          (let ((filename (buffer-file-name)))
+            (if filename
+                (file-name-directory filename)
+              default-directory))))))
+
 (define-key eproject-mode-map (kbd "C-c C-f") #'eproject-find-file)
 (define-key eproject-mode-map (kbd "C-c C-b") #'eproject-ibuffer)
 (define-key eproject-mode-map (kbd "C-c b") #'eproject-switch-to-buffer)
