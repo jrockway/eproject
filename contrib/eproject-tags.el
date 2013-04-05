@@ -62,8 +62,8 @@ Only works with exuberant-ctags; this will cause standard etags to blow up in a 
   with the project root and STATE upon completion.
 
 By default the tags command is passed all project-relevant files as arguments. A
-project can instead define a list of files (and other arguments) in the project
-attribute :tags-cmd-args.
+project can instead return a list of files (and other arguments) in a function
+defined in project attribute :tags-cmd-args.
 
 Output goes to root/TAGS. The tags table is not visited after generation."
   (let* ((root  (or root (eproject-root)))
