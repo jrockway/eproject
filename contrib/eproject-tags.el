@@ -58,18 +58,23 @@ Only works with exuberant-ctags; this will cause standard etags to blow up in a 
       (insert "\n"))))
 
 (defun eproject-tags--generate (cb &optional state root)
-  "Generate a tags table for this project (or the project in ROOT), calling CB with the project root and STATE upon completion.
+  "Generate a tags table for this project (or the project in ROOT), calling CB
+  with the project root and STATE upon completion.
 
-All project-relevant files are considered and output goes to root/TAGS.  The tags table is not visited after generation."
+By default the tags command is passed all project-relevant files as arguments. A
+project can instead define a list of files (and other arguments) in the project
+attribute :tags-cmd-args.
+
+Output goes to root/TAGS. The tags table is not visited after generation."
   (let* ((root  (or root (eproject-root)))
          (default-directory root)
-         (files (eproject-list-project-files-relative root))
          (name  (concat (eproject-attribute :name root) "-TAGS"))
          (buf   (eproject-tags--buffer root))
          (args  (append '("-o" ".TAGS-tmp")
-                        (if eproject-tags-verbose '("--verbose"))))
-         (proc  (apply #'start-process name buf eproject-tags-etags
-                       (append args files))))
+                        (if eproject-tags-verbose '("--verbose"))
+                        (or (eproject-attribute :tags-cmd-args root)
+                            (eproject-list-project-files-relative root))))
+         (proc  (apply #'start-process name buf eproject-tags-etags args)))
 
     (with-current-buffer buf
       (setq eproject-tags-callback cb)
