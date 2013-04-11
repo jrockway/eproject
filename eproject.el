@@ -221,6 +221,17 @@
   :link '(emacs-library-link :tag "Optional extras" "eproject-extras.el")
   :link '(url-link :tag "Github wiki" "http://wiki.github.com/jrockway/eproject"))
 
+(defcustom eproject-shortcut-search nil
+  "If not nil, shortcut searches if a file already in an open eproject
+directory.
+
+Setting to true will cause confusion if you have sub-projects inside
+your projects. However it will be a lot faster if you are working
+remotely over things like TRAMP."
+  :group 'eproject
+  :type 'boolean)
+
+
 (defvar eproject-root nil
   "A buffer-local variable set to the root of its eproject
   project.  NIL if it isn't in an eproject.  Your code should
@@ -542,17 +553,29 @@ else through unchanged."
 (defun eproject-maybe-turn-on ()
   "Turn on eproject for the current buffer, if it is in a project."
   (interactive)
-  (let (bestroot besttype (set-before (mapcar #'car eproject-attributes-alist)))
-    (loop for type in (eproject--all-types)
-          do (let ((root (eproject--run-project-selector type)))
-               (when (and root
-                          (or (not bestroot)
-                              ;; longest filename == best match (XXX:
-                              ;; need to canonicalize?)
-                              (> (length root) (length bestroot))))
-                 (setq bestroot root)
-                 (setq besttype type))))
+  (message "eproject searching for potential roots")
+  (let* ((set-before (eproject--known-project-roots))
+	 (filename (buffer-file-name))
+	 (bestroot (find-if '(lambda(x) (string-match x filename))
+			   set-before))
+	 (besttype (if bestroot (getf (cdr (assoc bestroot eproject-attributes-alist))
+			 :type))))
+    (message (format "bestroot=%s besttype=%s set-before=%s" bestroot
+		     besttype set-before))
+    (unless (and eproject-shortcut-search
+		 bestroot
+		 besttype)
+      (loop for type in (eproject--all-types)
+	    do (let ((root (eproject--run-project-selector type)))
+		 (when (and root
+			    (or (not bestroot)
+				;; longest filename == best match (XXX:
+				;; need to canonicalize?)
+				(> (length root) (length bestroot))))
+		   (setq bestroot root)
+		   (setq besttype type)))))
     (when bestroot
+      (message (format "eproject found: %s as bestroot" bestroot))
       (setq eproject-root (file-name-as-directory bestroot))
 
       ;; read .eproject file (etc.) and initialize at least :name and
@@ -647,6 +670,7 @@ No check is done to ensure that the root subsumes FILE or even
 that FILE is an absolute path."
   ;; XXX: this logic is sort of copied from search-directory-tree.
   ;; maybe combine?
+  ;; AJB: broken? I get the same regexps whatever project root applied?
   (destructuring-bind (matcher . ignore) (eproject--file-check-regexps root)
     (and (not (string-match ignore file))
          (not (string-match ignore (file-name-nondirectory file)))
