@@ -51,13 +51,26 @@
 
 (require 'find-cmd)
 
+;; This is a work around.  find-cmd tries to put (expand-file-name
+;; default-directory) on the command line, but that results in find-grep output
+;; having long absolute pathname matches.  See
+;; eproject-find-cmd-custom-find-grep.
+(defun find-cmd-cwd (&rest subfinds)
+  (concat
+   "find . "
+           (cond
+            ((cdr subfinds)
+             (mapconcat 'find-to-string subfinds ""))
+            (t
+             (find-to-string (car subfinds))))))
+
 (defun build-cd-and-find-cmd (dir find-cmd-sexp)
   "Builds a command line with format \"cd <dir> && find. <args>\".
 This makes the find output paths relative to DIR (thus shorter)
 for readability in tools like anything & find-grep"
   (let ((root-directory dir)
         (default-directory "."))
-    (concat "cd " root-directory " && " (find-cmd find-cmd-sexp))))
+    (concat "cd " root-directory " && " (find-cmd-cwd find-cmd-sexp))))
 
 (defun eproject-find-cmd--sexp-or-default ()
   (let ((find-cmd-sexp (eproject-attribute :find-cmd-sexp)))
