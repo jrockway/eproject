@@ -58,7 +58,7 @@
        (list (format "cd %s && make -k" (eproject-root)))))))
 
 ;;;###autoload
-(defun eproject-compile (arg)
+(defun eproject-compile ()
   "Run `compile' in the project root.
 
 This uses a computed history based on project attributes, the
@@ -68,13 +68,19 @@ been locally set by a mode.
 To provide defaults for a project or project type, set the
 `:common-compiles' attribute to a list of strings representing
 the command to invoke."
-  (interactive "P")
+  (interactive)
   (let* ((default-directory (eproject-root))
 	 (ehistory (append (eproject--build-new-history) compile-history))
-	 (ecompile (if arg compile-command
-                     (read-shell-command
-                      "Compile command: " compile-command 'ehistory))))
+	 (ecompile (read-shell-command
+		    "Compile command: " compile-command 'ehistory)))
     (compile ecompile)))
+
+(defun eproject-compile-repeat ()
+  "Run 'compile' in the project root, using most recent command
+in compile-command."
+  (interactive)
+  (let* ((default-directory (eproject-root)))
+    (compile compile-command)))
 
 (define-key eproject-mode-map (kbd "C-c C-k") #'eproject-compile)
 
