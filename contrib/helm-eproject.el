@@ -64,7 +64,7 @@
     (candidates . (lambda ()
 		    (with-helm-current-buffer
 		      (when (and (boundp 'eproject-mode) eproject-mode)
-			(eproject-list-project-files)))))))
+			(eproject-list-project-files-relative)))))))
 
 (defun helm-eproject ()
   "helps helm to use eproject to find a file"
