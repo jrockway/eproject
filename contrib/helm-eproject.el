@@ -69,7 +69,7 @@
     (action . (lambda (candidate)
                 (let ((candidate-abs (concat (eproject-root) candidate)))
                   (message candidate-abs)
-                  (helm-switch-to-buffer candidate))))))
+                  (helm-switch-to-buffer candidate-abs))))))
                 ;; (let ((mjm (and helm-current-prefix-arg
                  ;;                 (intern (helm-comp-read
                  ;;                          "Major-mode: "
