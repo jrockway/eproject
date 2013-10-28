@@ -67,7 +67,7 @@
 		      (when (and (boundp 'eproject-mode) eproject-mode)
 			(eproject-list-project-files-relative)))))
     (action . (lambda (candidate)
-                (let ((candidate-abs (cons (eproject-root) candidate)))
+                (let ((candidate-abs (concat (eproject-root) candidate)))
                   (message candidate-abs)
                   (helm-switch-to-buffer candidate))))))
                 ;; (let ((mjm (and helm-current-prefix-arg
