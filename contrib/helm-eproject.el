@@ -61,10 +61,25 @@
 (defvar helm-eproject-source
   '((name . "Eproject")
     (type . file)
+    (match . helm-files-match-only-basename)
     (candidates . (lambda ()
 		    (with-helm-current-buffer
 		      (when (and (boundp 'eproject-mode) eproject-mode)
-			(eproject-list-project-files-relative)))))))
+			(eproject-list-project-files-relative)))))
+    (action . (lambda (candidate)
+                (let ((candidate-abs (cons (eproject-root) candidate)))
+                  (message candidate-abs)
+                  (helm-switch-to-buffer candidate))))))
+                ;; (let ((mjm (and helm-current-prefix-arg
+                 ;;                 (intern (helm-comp-read
+                 ;;                          "Major-mode: "
+                 ;;                          helm-buffers-favorite-modes))))
+                 ;;       (buffer (get-buffer-create candidate)))
+                 ;;   (if mjm
+                 ;;       (with-current-buffer buffer (funcall mjm))
+                 ;;     (set-buffer-major-mode buffer))
+                 ;;   (helm-switch-to-buffer buffer))))))
+
 
 (defun helm-eproject ()
   "helps helm to use eproject to find a file"
