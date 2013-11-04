@@ -549,15 +549,16 @@ else through unchanged."
   "Turn on eproject for the current buffer, if it is in a project."
   (interactive)
   (let (bestroot besttype (set-before (mapcar #'car eproject-attributes-alist)))
-    (loop for type in (eproject--all-types)
-          do (let ((root (eproject--run-project-selector type)))
-               (when (and root
-                          (or (not bestroot)
-                              ;; longest filename == best match (XXX:
-                              ;; need to canonicalize?)
-                              (> (length root) (length bestroot))))
-                 (setq bestroot root)
-                 (setq besttype type))))
+    (when (buffer-file-name (current-buffer))
+      (loop for type in (eproject--all-types)
+            do (let ((root (eproject--run-project-selector type)))
+                 (when (and root
+                            (or (not bestroot)
+                                ;; longest filename == best match (XXX:
+                                ;; need to canonicalize?)
+                                (> (length root) (length bestroot))))
+                   (setq bestroot root)
+                   (setq besttype type)))))
     (when bestroot
       (setq eproject-root (file-name-as-directory bestroot))
 
@@ -566,7 +567,7 @@ else through unchanged."
       (condition-case e
           (eproject--init-attributes eproject-root besttype)
         (error (display-warning 'warning
-            (format "There was a problem setting up the eproject attributes for this project: %s" e))))
+                                (format "There was a problem setting up the eproject attributes for this project: %s" e))))
 
       ;; with :name and :type set, it's now safe to turn on eproject
       (eproject-mode 1)
@@ -577,8 +578,8 @@ else through unchanged."
       (condition-case e
           (eproject--setup-local-variables)
         (error (display-warning 'warning
-          (format "Problem initializing project-specific local-variables in %s: %s"
-                  (eproject--buffer-file-name) e))))
+                                (format "Problem initializing project-specific local-variables in %s: %s"
+                                        (eproject--buffer-file-name) e))))
 
       ;; run the first-buffer hooks if this is the first time we've
       ;; seen this particular project root.
