@@ -349,11 +349,11 @@ not in a project."
                 (file-name-directory filename)
               default-directory))))))
 
-(define-key eproject-mode-map (kbd "C-c C-f") #'eproject-find-file)
-(define-key eproject-mode-map (kbd "C-c C-b") #'eproject-ibuffer)
-(define-key eproject-mode-map (kbd "C-c b") #'eproject-switch-to-buffer)
-(define-key eproject-mode-map (kbd "C-c 4 b") #'eproject-switch-to-buffer-other-window)
-(define-key eproject-mode-map (kbd "C-c 5 b") #'eproject-switch-to-buffer-other-frame)
+(define-key eproject-mode-map (kbd (concat eproject-keybind-prefix " C-f")) #'eproject-find-file)
+(define-key eproject-mode-map (kbd (concat eproject-keybind-prefix " C-b")) #'eproject-ibuffer)
+(define-key eproject-mode-map (kbd (concat eproject-keybind-prefix " b")) #'eproject-switch-to-buffer)
+(define-key eproject-mode-map (kbd (concat eproject-keybind-prefix " 4 b")) #'eproject-switch-to-buffer-other-window)
+(define-key eproject-mode-map (kbd (concat eproject-keybind-prefix " 5 b")) #'eproject-switch-to-buffer-other-frame)
 
 (provide 'eproject-extras)
 ;;; eproject-extras.el ends here

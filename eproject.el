@@ -221,6 +221,12 @@
   :link '(emacs-library-link :tag "Optional extras" "eproject-extras.el")
   :link '(url-link :tag "Github wiki" "http://wiki.github.com/jrockway/eproject"))
 
+(defcustom eproject-keybind-prefix
+  "C-c"
+  "The keybind prefix for eproject"
+  :type 'string
+  :group 'eproject)
+
 (defvar eproject-root nil
   "A buffer-local variable set to the root of its eproject
   project.  NIL if it isn't in an eproject.  Your code should
@@ -667,7 +673,7 @@ that FILE is an absolute path."
 
 (define-derived-mode dot-eproject-mode emacs-lisp-mode "dot-eproject"
   "Major mode for editing .eproject files."
-  (define-key dot-eproject-mode-map (kbd "C-c C-c") #'eproject-reinitialize-project))
+  (define-key dot-eproject-mode-map (kbd (concat eproject-keybind-prefix " C-c")) #'eproject-reinitialize-project))
 
 ;; introspect sets of projects
 (defun eproject-projects ()
