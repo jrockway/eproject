@@ -75,6 +75,13 @@ the command to invoke."
 		    "Compile command: " compile-command 'ehistory)))
     (compile ecompile)))
 
+(defun eproject-compile-repeat ()
+  "Run 'compile' in the project root, using most recent command
+in compile-command."
+  (interactive)
+  (let* ((default-directory (eproject-root)))
+    (compile compile-command)))
+
 (define-key eproject-mode-map (kbd "C-c C-k") #'eproject-compile)
 
 (provide 'eproject-compile)
