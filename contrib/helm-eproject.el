@@ -61,10 +61,14 @@
 (defvar helm-eproject-source
   '((name . "Eproject")
     (type . file)
+    (match . helm-files-match-only-basename)
     (candidates . (lambda ()
 		    (with-helm-current-buffer
 		      (when (and (boundp 'eproject-mode) eproject-mode)
-			(eproject-list-project-files)))))))
+			(eproject-list-project-files-relative)))))
+    (action . (lambda (candidate)
+                (let ((candidate-abs (concat (eproject-root) candidate)))
+                  (find-file candidate-abs))))))
 
 (defun helm-eproject ()
   "helps helm to use eproject to find a file"
