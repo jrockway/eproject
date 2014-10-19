@@ -6,6 +6,7 @@
 ;; Maintainer: Jonathan Rockway <jon@jrock.us>
 ;; Created: 20 Nov 2008
 ;; Version: 1.5
+;; Package-Requires: ((helm "1.6.4"))
 ;; Keywords: programming, projects
 ;;
 ;; This file is not a part of GNU Emacs.
