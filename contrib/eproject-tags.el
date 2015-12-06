@@ -66,8 +66,7 @@ All project-relevant files are considered and output goes to root/TAGS.  The tag
          (files (eproject-list-project-files-relative root))
          (name  (concat (eproject-attribute :name root) "-TAGS"))
          (buf   (eproject-tags--buffer root))
-         (args  (append '("-o" ".TAGS-tmp")
-                        (if eproject-tags-verbose '("--verbose"))))
+         (args  (append '("-o" ".TAGS-tmp")))
          (proc  (apply #'start-process name buf eproject-tags-etags
                        (append args files))))
 
