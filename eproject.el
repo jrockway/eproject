@@ -327,9 +327,6 @@ become project attributes."
 
 (define-project-type generic-eproject (generic) (look-for ".eproject"))
 
-(define-project-type generic-git (generic) (look-for ".git")
-  :irrelevant-files ("^[.]" "^[#]" ".git/"))
-
 (define-project-type generic-hg (generic) (look-for ".hg")
   :irrelevant-files ("^[.]" "^[#]" ".hg/"))
 
