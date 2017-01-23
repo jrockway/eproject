@@ -145,6 +145,9 @@ Does not list the project if it doesn't have any buffers."
 					  (unless (eq buf calling-buffer)
 					    buf))))
 				    (buffer-list))))
+         (buffers (when (eq eproject-completing-read-function
+                          #'eproject--ido-completing-read)
+                      (mapcar #'buffer-name buffers)))
 	 (chosen-buf (eproject--do-completing-read
 		      "switch to buffer in project: " buffers)))
     (funcall switch-func chosen-buf)))
